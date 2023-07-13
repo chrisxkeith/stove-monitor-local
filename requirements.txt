@@ -1,0 +1,15 @@
+asgiref==3.7.2
+certifi==2023.5.7
+charset-normalizer==3.2.0
+Django==4.2.3
+hammock==0.2.4
+idna==3.4
+PyParticleIO==0.1.5
+python-dotenv==1.0.0
+pywin32==306
+requests==2.31.0
+six==1.16.0
+sqlparse==0.4.4
+sseclient==0.0.27
+tzdata==2023.3
+urllib3==2.0.3
