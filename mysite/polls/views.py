@@ -69,7 +69,7 @@ if os.path.exists("./.env"):
     lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
     temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
 else:
-    env_file_err = "No file: ./.env"
+    env_file_err = "Error: No file: ./.env"
 
 def getTimeString(theDateTime):
     return theDateTime.astimezone(ZoneInfo('US/Pacific')).strftime('%I:%M %p')
@@ -86,18 +86,18 @@ def getTimeVals(ts):
     elapsed_time = getElapsedTime(ts)
     return [ on_time, elapsed_time]
 
-latest_event = "No data yet"
-on_time = ""
-elapsed_time = ""
-temperature = "No data yet"
-
-if env_file_err:
-    status = env_file_err
-else:
-    [ status, on_time, elapsed_time ] = lightSensor.getDisplayVals()
-    temperature = temperatureSensor.getDisplayVals()
-
 def index(request):
+    latest_event = "No data yet"
+    on_time = ""
+    elapsed_time = ""
+    temperature = "No data yet"
+
+    if env_file_err:
+        status = env_file_err
+    else:
+        [ status, on_time, elapsed_time ] = lightSensor.getDisplayVals()
+        temperature = temperatureSensor.getDisplayVals()
+
     thePage = Template("    <style>" + \
     "  h1 { text-align: center; }" + \
     "  h3 { text-align: center; }" + \
@@ -105,7 +105,7 @@ def index(request):
     "<h3>" + \
     "    Burner indicator light<br>" + \
     "    <i><big><big>" + \
-    "        $latest_event" + \
+    "        $status" + \
     "        <br>" + \
     "        $on_time" + \
     "        <br>" + \
@@ -118,5 +118,5 @@ def index(request):
     "        $temperature" + \
     "    </big></big></i>" + \
     "</h3>")
-    return HttpResponse(thePage.substitute(latest_event = latest_event, on_time = on_time, 
+    return HttpResponse(thePage.substitute(status = status, on_time = on_time, 
                                            elapsed_time = elapsed_time, temperature = temperature))
