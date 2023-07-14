@@ -84,7 +84,7 @@ def getElapsedTime(pastTime):
 def getTimeVals(ts):
     on_time = getTimeString(ts)
     elapsed_time = getElapsedTime(ts)
-    return [ on_time, elapsed_time]
+    return [ on_time, elapsed_time ]
 
 def index(request):
     latest_event = "No data yet"
@@ -127,3 +127,13 @@ def index(request):
     return HttpResponse(thePage.substitute(status = status, on_time = on_time, 
                                            elapsed_time = elapsed_time, temperature = temperature,
                                            timeNow = timeNow))
+
+def history(request):
+    if env_file_err:
+         theHistory= env_file_err
+    else:
+        theHistory = "lightSensor.latest_event: " + str(lightSensor.latest_event) + "<br>" + \
+                    "lightSensor.latest_on_event: " + str(lightSensor.latest_on_event) + "<br>" + \
+                    "temperatureSensor.latest_temperature_event: " + str(temperatureSensor.latest_temperature_event) + "<br>"        
+
+    return HttpResponse(theHistory)
