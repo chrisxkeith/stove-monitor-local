@@ -5,3 +5,8 @@
 `cd stove-monitor-local/mysite/`
 
 `python -m pip install Django`
+
+`pip install python_dotenv`
+
+`pip install PyParticleIO`
+
