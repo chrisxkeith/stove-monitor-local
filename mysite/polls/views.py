@@ -91,12 +91,15 @@ def index(request):
     on_time = ""
     elapsed_time = ""
     temperature = "No data yet"
+    timeNow = ""
 
     if env_file_err:
         status = env_file_err
     else:
         [ status, on_time, elapsed_time ] = lightSensor.getDisplayVals()
         temperature = temperatureSensor.getDisplayVals()
+        now = datetime.now(ZoneInfo('US/Pacific'))
+        timeNow = now.strftime("%a %d %b %Y, %I:%M%p")
 
     thePage = Template("    <style>" + \
     "  h1 { text-align: center; }" + \
@@ -117,6 +120,10 @@ def index(request):
     "    <i><big><big>" + \
     "        $temperature" + \
     "    </big></big></i>" + \
-    "</h3>")
+    "</h3>" + \
+    "<center><small>" + \
+    "   $timeNow" + \
+    "</small></center>")
     return HttpResponse(thePage.substitute(status = status, on_time = on_time, 
-                                           elapsed_time = elapsed_time, temperature = temperature))
+                                           elapsed_time = elapsed_time, temperature = temperature,
+                                           timeNow = timeNow))
