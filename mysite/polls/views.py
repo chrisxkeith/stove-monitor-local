@@ -101,7 +101,12 @@ def index(request):
         now = datetime.now(ZoneInfo('US/Pacific'))
         timeNow = now.strftime("%a %d %b %Y, %I:%M%p")
 
-    thePage = Template("    <style>" + \
+    thePage = Template("<html lang=\"en\">" + \
+    "  <head>" + \
+    "    <title>Stove Monitor</title>" + \
+    "    <meta http-equiv=\"refresh\" content=\"5\">" + \
+    "  </head>" + \
+    "    <style>" + \
     "  h1 { text-align: center; }" + \
     "  h3 { text-align: center; }" + \
     "</style>" + \
@@ -123,7 +128,8 @@ def index(request):
     "</h3>" + \
     "<center><small>" + \
     "   $timeNow" + \
-    "</small></center>")
+    "</small></center>" + \
+    "</html>")
     return HttpResponse(thePage.substitute(status = status, on_time = on_time, 
                                            elapsed_time = elapsed_time, temperature = temperature,
                                            timeNow = timeNow))
