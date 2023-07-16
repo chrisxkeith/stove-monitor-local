@@ -66,7 +66,7 @@ class LightSensor(Sensor):
 
     def getTimeVals(self, ts):
         on_time = self.getTimeString(ts)
-        elapsed_time = self.getElapsedTime(ts)
+        elapsed_time = self.getElapsedTime()
         return [ on_time, elapsed_time ]
 
     def getTimeString(self, theDateTime):
@@ -79,8 +79,8 @@ class LightSensor(Sensor):
                                   "%Y-%m-%dT%H:%M:%S.%f%z"))
         return -1
 
-    def getElapsedTime(self, pastTime):
-        elapsedSeconds = self.getElapsedSeconds(pastTime)
+    def getElapsedTime(self):
+        elapsedSeconds = self.getElapsedSeconds()
         mins = int(elapsedSeconds.total_seconds() / 60)
         secs = int(elapsedSeconds.total_seconds() % 60)
         return "{:0>2}:{:0>2}".format(mins, secs)
