@@ -58,10 +58,33 @@ class LightSensor(Sensor):
         else:
             status = "No data yet"
         if self.latest_on_event:
-            [ on_time, elapsed_time ] = getTimeVals(datetime.strptime(self.latest_on_event["published_at"], "%Y-%m-%dT%H:%M:%S.%f%z"))
+            [ on_time, elapsed_time ] = self.getTimeVals(
+                    datetime.strptime(self.latest_on_event["published_at"],
+                                      "%Y-%m-%dT%H:%M:%S.%f%z"))
             elapsed_time += " elapsed"
         return [ status, on_time, elapsed_time ]
-    
+
+    def getTimeVals(self, ts):
+        on_time = self.getTimeString(ts)
+        elapsed_time = self.getElapsedTime(ts)
+        return [ on_time, elapsed_time ]
+
+    def getTimeString(self, theDateTime):
+        return theDateTime.astimezone(ZoneInfo('US/Pacific')).strftime('%I:%M %p')
+
+    def getElapsedSeconds(self):
+        if self.latest_on_event:
+            return self.getElapsedSeconds(
+                datetime.strptime(self.latest_on_event["published_at"],
+                                  "%Y-%m-%dT%H:%M:%S.%f%z"))
+        return -1
+
+    def getElapsedTime(self, pastTime):
+        elapsedSeconds = self.getElapsedSeconds(pastTime)
+        mins = int(elapsedSeconds.total_seconds() / 60)
+        secs = int(elapsedSeconds.total_seconds() % 60)
+        return "{:0>2}:{:0>2}".format(mins, secs)
+
 env_file_err = None
 if os.path.exists("./.env"):
     load_dotenv("./.env")
@@ -71,20 +94,6 @@ if os.path.exists("./.env"):
 else:
     env_file_err = "Error: No file: ./.env"
 
-def getTimeString(theDateTime):
-    return theDateTime.astimezone(ZoneInfo('US/Pacific')).strftime('%I:%M %p')
-
-def getElapsedTime(pastTime):
-    now = datetime.now(ZoneInfo('US/Pacific'))
-    elapsedSeconds = now - pastTime
-    mins = int(elapsedSeconds.total_seconds() / 60)
-    secs = int(elapsedSeconds.total_seconds() % 60)
-    return "{:0>2}:{:0>2}".format(mins, secs)
-
-def getTimeVals(ts):
-    on_time = getTimeString(ts)
-    elapsed_time = getElapsedTime(ts)
-    return [ on_time, elapsed_time ]
 
 def index(request):
     latest_event = "No data yet"
@@ -92,6 +101,8 @@ def index(request):
     elapsed_time = ""
     temperature = "No data yet"
     timeNow = ""
+    red_h3tag1 = ""
+    red_h3Tag2 = ""
 
     if env_file_err:
         status = env_file_err
@@ -100,6 +111,9 @@ def index(request):
         temperature = temperatureSensor.getDisplayVals()
         now = datetime.now(ZoneInfo('US/Pacific'))
         timeNow = now.strftime("%a %d %b %Y, %I:%M%p")
+        if lightSensor.getElapsedSeconds() > 45 * 60:
+            red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
+            red_h3Tag2 = "<h3>"
 
     thePage = Template("<html lang=\"en\">" + \
     "  <head>" + \
@@ -117,7 +131,9 @@ def index(request):
     "        <br>" + \
     "        $on_time" + \
     "        <br>" + \
+    red_h3tag1 + \
     "        $elapsed_time" + \
+    red_h3Tag2 + \
     "    </big></big></i>" + \
     "</h3>" + \
     "<h3>" + \
