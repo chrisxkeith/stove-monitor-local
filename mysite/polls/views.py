@@ -93,9 +93,10 @@ class LightSensor(Sensor):
 
     def getElapsedSeconds(self):
         if self.eventHandler.latest_on_event:
-            return self.getElapsedSeconds(
-                datetime.strptime(self.eventHandler.latest_on_event["published_at"],
-                                  "%Y-%m-%dT%H:%M:%S.%f%z"))
+            now = datetime.now().astimezone(ZoneInfo('US/Pacific'))
+            then = datetime.strptime(self.eventHandler.latest_on_event["published_at"],
+                                  "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo('US/Pacific'))
+            return (now - then)
         return -1
 
     def getElapsedTime(self):
@@ -113,7 +114,8 @@ class App:
             self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
         else:
-            self.env_file_err = "Error: No file: ./.env"
+            self.env_file_err = "Error: No file: ./.env in " + os.getcwd()
+            print(self.env_file_err)
 
     def handleRequest(self):
         on_time = ""
@@ -130,7 +132,8 @@ class App:
             temperature = self.temperatureSensor.getDisplayVals()
             now = datetime.now(ZoneInfo('US/Pacific'))
             timeNow = now.strftime("%a %d %b %Y, %I:%M%p")
-            if self.lightSensor.getElapsedSeconds() > 45 * 60:
+            elapsedSeconds = self.lightSensor.getElapsedSeconds()
+            if elapsedSeconds > (45 * 60):
                 red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
                 red_h3Tag2 = "<h3>"
 
