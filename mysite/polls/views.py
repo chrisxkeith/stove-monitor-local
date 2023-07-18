@@ -10,8 +10,15 @@ import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-class Sensor:
+# Split event handler from Sensor for automated testing
+class EventHandler:
     latest_event = None
+
+    def handle_call_back(self, event_data):
+        self.latest_event = event_data
+
+class Sensor:
+    eventHandler = EventHandler()
 
     def __init__(self, particleCloud, deviceName, eventName):
         device = [d for d in particleCloud.devices_list if d.name == deviceName][0]
@@ -22,9 +29,9 @@ class Sensor:
             print(repr(e) + ", deviceName: " + deviceName + ", eventName: " + eventName)
 
     def handle_call_back(self, event_data):
-        self.latest_event = event_data
+        self.eventHandler.handle_call_back(event_data)
 
-class TemperatureSensor(Sensor):
+class TemperatureEventHandler(EventHandler):
     latest_temperature_event = None
 
     def handle_call_back(self, event_data):
@@ -32,13 +39,19 @@ class TemperatureSensor(Sensor):
         if self.latest_event["event_name"] == "Temperature":
             self.latest_temperature_event = event_data
 
+class TemperatureSensor(Sensor):
+    eventHandler = TemperatureEventHandler()
+
+    def handle_call_back(self, event_data):
+        self.eventHandler.handle_call_back(event_data)
+
     def getDisplayVals(self):
         temperature = "No data yet"
-        if (self.latest_temperature_event):
-            temperature = str(self.latest_event["data"])
+        if (self.eventHandler.latest_temperature_event):
+            temperature = str(self.eventHandler.latest_event["data"])
         return temperature
 
-class LightSensor(Sensor):
+class LightEventHandler(EventHandler):
     latest_on_event = None
 
     def handle_call_back(self, event_data):
@@ -48,18 +61,24 @@ class LightSensor(Sensor):
         if event_data["data"] == "false":
             self.latest_on_event = None
 
+class LightSensor(Sensor):
+    eventHandler = LightEventHandler()
+
+    def handle_call_back(self, event_data):
+        self.eventHandler.handle_call_back(event_data)
+
     def getDisplayVals(self):
         status = "Off"
         on_time = ""
         elapsed_time = ""
-        if (self.latest_event):
-            if self.latest_event["data"] == 'true':
+        if (self.eventHandler.latest_event):
+            if self.eventHandler.latest_event["data"] == 'true':
                 status = "On"
         else:
             status = "No data yet"
-        if self.latest_on_event:
+        if self.eventHandler.latest_on_event:
             [ on_time, elapsed_time ] = self.getTimeVals(
-                    datetime.strptime(self.latest_on_event["published_at"],
+                    datetime.strptime(self.eventHandler.latest_on_event["published_at"],
                                       "%Y-%m-%dT%H:%M:%S.%f%z"))
             elapsed_time += " elapsed"
         return [ status, on_time, elapsed_time ]
@@ -73,9 +92,9 @@ class LightSensor(Sensor):
         return theDateTime.astimezone(ZoneInfo('US/Pacific')).strftime('%I:%M %p')
 
     def getElapsedSeconds(self):
-        if self.latest_on_event:
+        if self.eventHandler.latest_on_event:
             return self.getElapsedSeconds(
-                datetime.strptime(self.latest_on_event["published_at"],
+                datetime.strptime(self.eventHandler.latest_on_event["published_at"],
                                   "%Y-%m-%dT%H:%M:%S.%f%z"))
         return -1
 
@@ -154,9 +173,9 @@ class App:
         if self.env_file_err:
             theHistory = self.env_file_err
         else:
-            theHistory = "lightSensor.latest_event: " + str(self.lightSensor.latest_event) + "<br>" + \
-                        "lightSensor.latest_on_event: " + str(self.lightSensor.latest_on_event) + "<br>" + \
-                        "temperatureSensor.latest_temperature_event: " + str(self.temperatureSensor.latest_temperature_event) + "<br>"  
+            theHistory = "lightSensor.latest_event: " + str(self.lightSensor.eventHandler.latest_event) + "<br>" + \
+                        "lightSensor.latest_on_event: " + str(self.lightSensor.eventHandler.latest_on_event) + "<br>" + \
+                        "temperatureSensor.latest_temperature_event: " + str(self.temperatureSensor.eventHandler.latest_temperature_event) + "<br>"  
         return HttpResponse(theHistory)      
 
 app = App()
