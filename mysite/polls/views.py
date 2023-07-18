@@ -94,7 +94,7 @@ class App:
             self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
         else:
-            env_file_err = "Error: No file: ./.env"
+            self.env_file_err = "Error: No file: ./.env"
 
     def handleRequest(self):
         on_time = ""
