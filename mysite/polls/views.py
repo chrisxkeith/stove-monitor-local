@@ -85,77 +85,84 @@ class LightSensor(Sensor):
         secs = int(elapsedSeconds.total_seconds() % 60)
         return "{:0>2}:{:0>2}".format(mins, secs)
 
-env_file_err = None
-if os.path.exists("./.env"):
-    load_dotenv("./.env")
-    particleCloud = ParticleCloud(username_or_access_token=os.getenv("ACCESS_TOKEN"))
-    lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
-    temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
-else:
-    env_file_err = "Error: No file: ./.env"
+class App:
+    def __init__(self):
+        self.env_file_err = None
+        if os.path.exists("./.env"):
+            load_dotenv("./.env")
+            particleCloud = ParticleCloud(username_or_access_token=os.getenv("ACCESS_TOKEN"))
+            self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
+            self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
+        else:
+            env_file_err = "Error: No file: ./.env"
 
+    def handleRequest(self):
+        on_time = ""
+        elapsed_time = ""
+        temperature = "No data yet"
+        timeNow = ""
+        red_h3tag1 = ""
+        red_h3Tag2 = ""
+
+        if self.env_file_err:
+            status = self.env_file_err
+        else:
+            [ status, on_time, elapsed_time ] = self.lightSensor.getDisplayVals()
+            temperature = self.temperatureSensor.getDisplayVals()
+            now = datetime.now(ZoneInfo('US/Pacific'))
+            timeNow = now.strftime("%a %d %b %Y, %I:%M%p")
+            if self.lightSensor.getElapsedSeconds() > 45 * 60:
+                red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
+                red_h3Tag2 = "<h3>"
+
+        thePage = Template("<html lang=\"en\">" + \
+        "  <head>" + \
+        "    <title>Stove Monitor</title>" + \
+        "    <meta http-equiv=\"refresh\" content=\"5\">" + \
+        "  </head>" + \
+        "    <style>" + \
+        "  h1 { text-align: center; }" + \
+        "  h3 { text-align: center; }" + \
+        "</style>" + \
+        "<h3>" + \
+        "    Burner indicator light<br>" + \
+        "    <i><big><big>" + \
+        "        $status" + \
+        "        <br>" + \
+        "        $on_time" + \
+        "        <br>" + \
+        red_h3tag1 + \
+        "        $elapsed_time" + \
+        red_h3Tag2 + \
+        "    </big></big></i>" + \
+        "</h3>" + \
+        "<h3>" + \
+        "    Stovetop average temperature<br>" + \
+        "    <i><big><big>" + \
+        "        $temperature" + \
+        "    </big></big></i>" + \
+        "</h3>" + \
+        "<center><small>" + \
+        "   $timeNow" + \
+        "</small></center>" + \
+        "</html>")
+        return HttpResponse(thePage.substitute(status = status, on_time = on_time, 
+                                            elapsed_time = elapsed_time, temperature = temperature,
+                                            timeNow = timeNow))
+
+    def handleHistory(self):
+        if self.env_file_err:
+            theHistory = self.env_file_err
+        else:
+            theHistory = "lightSensor.latest_event: " + str(self.lightSensor.latest_event) + "<br>" + \
+                        "lightSensor.latest_on_event: " + str(self.lightSensor.latest_on_event) + "<br>" + \
+                        "temperatureSensor.latest_temperature_event: " + str(self.temperatureSensor.latest_temperature_event) + "<br>"  
+        return HttpResponse(theHistory)      
+
+app = App()
 
 def index(request):
-    latest_event = "No data yet"
-    on_time = ""
-    elapsed_time = ""
-    temperature = "No data yet"
-    timeNow = ""
-    red_h3tag1 = ""
-    red_h3Tag2 = ""
-
-    if env_file_err:
-        status = env_file_err
-    else:
-        [ status, on_time, elapsed_time ] = lightSensor.getDisplayVals()
-        temperature = temperatureSensor.getDisplayVals()
-        now = datetime.now(ZoneInfo('US/Pacific'))
-        timeNow = now.strftime("%a %d %b %Y, %I:%M%p")
-        if lightSensor.getElapsedSeconds() > 45 * 60:
-            red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
-            red_h3Tag2 = "<h3>"
-
-    thePage = Template("<html lang=\"en\">" + \
-    "  <head>" + \
-    "    <title>Stove Monitor</title>" + \
-    "    <meta http-equiv=\"refresh\" content=\"5\">" + \
-    "  </head>" + \
-    "    <style>" + \
-    "  h1 { text-align: center; }" + \
-    "  h3 { text-align: center; }" + \
-    "</style>" + \
-    "<h3>" + \
-    "    Burner indicator light<br>" + \
-    "    <i><big><big>" + \
-    "        $status" + \
-    "        <br>" + \
-    "        $on_time" + \
-    "        <br>" + \
-    red_h3tag1 + \
-    "        $elapsed_time" + \
-    red_h3Tag2 + \
-    "    </big></big></i>" + \
-    "</h3>" + \
-    "<h3>" + \
-    "    Stovetop average temperature<br>" + \
-    "    <i><big><big>" + \
-    "        $temperature" + \
-    "    </big></big></i>" + \
-    "</h3>" + \
-    "<center><small>" + \
-    "   $timeNow" + \
-    "</small></center>" + \
-    "</html>")
-    return HttpResponse(thePage.substitute(status = status, on_time = on_time, 
-                                           elapsed_time = elapsed_time, temperature = temperature,
-                                           timeNow = timeNow))
+    return app.handleRequest()
 
 def history(request):
-    if env_file_err:
-         theHistory= env_file_err
-    else:
-        theHistory = "lightSensor.latest_event: " + str(lightSensor.latest_event) + "<br>" + \
-                    "lightSensor.latest_on_event: " + str(lightSensor.latest_on_event) + "<br>" + \
-                    "temperatureSensor.latest_temperature_event: " + str(temperatureSensor.latest_temperature_event) + "<br>"        
-
-    return HttpResponse(theHistory)
+    return app.handleHistory()
