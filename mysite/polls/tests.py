@@ -16,10 +16,10 @@ class TestLightSensor(TestCase):
             "coreid" : "fake_core_id",
             "event_name" : "Light sensor",
         }, "Off")
-        # self.do_test({
-        #    "data" : "true",
-        #    "ttl" : 1,
-        #    "published_at" : "2023-07-17T16:39:01.560Z",
-        #    "coreid" : "fake_core_id",
-        #    "event_name" : "Light sensor",
-        # }, "On")
+        self.do_test({
+            "data" : "true",
+            "ttl" : 1,
+            "published_at" : "2023-07-17T16:39:01.560Z",
+            "coreid" : "fake_core_id",
+            "event_name" : "Light sensor",
+        }, "On")

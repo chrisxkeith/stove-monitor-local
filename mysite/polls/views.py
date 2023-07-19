@@ -94,16 +94,16 @@ class LightSensor(Sensor):
 
     def getElapsedSeconds(self):
         if self.eventHandler.latest_on_event:
-            now = datetime.now().astimezone(ZoneInfo('US/Pacific'))
+            now = datetime.now().astimezone(ZoneInfo('US/Pacific')).timestamp()
             then = datetime.strptime(self.eventHandler.latest_on_event["published_at"],
-                                  "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo('US/Pacific'))
+                                  "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo('US/Pacific')).timestamp()
             return (now - then)
         return -1
 
     def getElapsedTime(self):
         elapsedSeconds = self.getElapsedSeconds()
-        mins = int(elapsedSeconds.total_seconds() / 60)
-        secs = int(elapsedSeconds.total_seconds() % 60)
+        mins = int(elapsedSeconds / 60)
+        secs = int(elapsedSeconds % 60)
         return "{:0>2}:{:0>2}".format(mins, secs)
 
 class App:
