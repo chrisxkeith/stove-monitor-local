@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+from django.conf import settings
 from django.http import HttpResponse
 
 from string import Template
@@ -10,7 +11,6 @@ import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# Split event handler from Sensor for automated testing
 class EventHandler:
     latest_event = None
 
@@ -21,12 +21,13 @@ class Sensor:
     eventHandler = EventHandler()
 
     def __init__(self, particleCloud, deviceName, eventName):
-        device = [d for d in particleCloud.devices_list if d.name == deviceName][0]
-        device.subscribe(eventName, self.handle_call_back)
-        try:
-            device.getData("")
-        except Exception as e:
-            print(repr(e) + ", deviceName: " + deviceName + ", eventName: " + eventName)
+        if particleCloud:
+            device = [d for d in particleCloud.devices_list if d.name == deviceName][0]
+            device.subscribe(eventName, self.handle_call_back)
+            try:
+                device.getData("")
+            except Exception as e:
+                print(repr(e) + ", deviceName: " + deviceName + ", eventName: " + eventName)
 
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
@@ -109,8 +110,10 @@ class App:
     def __init__(self):
         self.env_file_err = None
         if os.path.exists("./.env"):
-            load_dotenv("./.env")
-            particleCloud = ParticleCloud(username_or_access_token=os.getenv("ACCESS_TOKEN"))
+            particleCloud = None
+            if not settings.TESTING:
+                load_dotenv("./.env")
+                particleCloud = ParticleCloud(username_or_access_token=os.getenv("ACCESS_TOKEN"))
             self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
         else:
