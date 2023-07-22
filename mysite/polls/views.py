@@ -13,6 +13,14 @@ from zoneinfo import ZoneInfo
 
 import csv
 
+def getElapsedSeconds(theEvent):
+    if theEvent:
+        now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
+        then = datetime.strptime(theEvent["published_at"],
+                                "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific")).timestamp()
+        return int(now - then)
+    return -1
+
 class CsvWriter():
     now = datetime.now().strftime('%Y%m%d%H%M%S')
     fileName = "events_" + now + ".csv"
@@ -27,6 +35,8 @@ class EventHandler:
     latest_event = None
 
     def handle_call_back(self, event_data):
+        if self.latest_event:
+            event_data["elapsed"] = getElapsedSeconds(self.latest_event)
         self.latest_event = event_data
 
 class Sensor:
@@ -50,6 +60,8 @@ class TemperatureEventHandler(EventHandler):
     def handle_call_back(self, event_data):
         super().handle_call_back(event_data)
         if self.latest_event["event_name"] == "Temperature":
+            if self.latest_temperature_event:
+                event_data["elapsed"] = getElapsedSeconds(self.latest_temperature_event)
             self.latest_temperature_event = event_data
             csvWriter.append(event_data)
 
@@ -70,6 +82,8 @@ class LightEventHandler(EventHandler):
 
     def handle_call_back(self, event_data):
         super().handle_call_back(event_data)
+        if self.latest_on_event:
+            event_data["elapsed"] = getElapsedSeconds(self.latest_on_event)
         if self.latest_on_event is None and event_data["data"] == "true":
             self.latest_on_event = self.latest_event
         if event_data["data"] == "false":
@@ -106,16 +120,13 @@ class LightSensor(Sensor):
     def getTimeString(self, theDateTime):
         return theDateTime.astimezone(ZoneInfo("US/Pacific")).strftime("%I:%M %p")
 
-    def getElapsedSeconds(self):
+    def getElapsedMySeconds(self):
         if self.eventHandler.latest_on_event:
-            now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
-            then = datetime.strptime(self.eventHandler.latest_on_event["published_at"],
-                                  "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific")).timestamp()
-            return (now - then)
+            return getElapsedSeconds(self.eventHandler.latest_on_event)
         return -1
 
     def getElapsedTime(self):
-        elapsedSeconds = self.getElapsedSeconds()
+        elapsedSeconds = self.getElapsedMySeconds()
         mins = int(elapsedSeconds / 60)
         secs = int(elapsedSeconds % 60)
         return "{:0>2}:{:0>2}".format(mins, secs)
@@ -149,7 +160,7 @@ class App:
             temperature = self.temperatureSensor.getDisplayVals()
             now = datetime.now(ZoneInfo("US/Pacific"))
             timeNow = now.strftime("%a %d %b %Y, %I:%M%p")
-            elapsedSeconds = self.lightSensor.getElapsedSeconds()
+            elapsedSeconds = self.lightSensor.getElapsedMySeconds()
             if elapsedSeconds > (45 * 60):
                 red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
                 red_h3Tag2 = "<h3>"
