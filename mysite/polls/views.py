@@ -17,7 +17,7 @@ def getElapsedSeconds(theEvent):
     if theEvent:
         now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
         then = datetime.strptime(theEvent["published_at"],
-                                "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific")).timestamp()
+                                "%Y-%m-%d %H:%M:%S").astimezone(ZoneInfo("US/Pacific")).timestamp()
         return int(now - then)
     return -1
 
@@ -27,6 +27,10 @@ class CsvWriter():
     def append(self, event):
         with open(self.fileName, "a", newline="") as csvfile:
             theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
+            # format for Google Sheets
+            pst = datetime.strptime(event["published_at"],
+                                    "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
+            event["published_at"] = pst.strftime("%Y-%m-%d %H:%M:%S")
             theWriter.writerow(event)
 
 csvWriter = CsvWriter()
