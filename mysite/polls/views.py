@@ -59,11 +59,16 @@ class Sensor:
         self.eventHandler.handle_call_back(event_data)
 
 class TemperatureEventHandler(EventHandler):
+    first_temperature_event = None
+    total_temperature_events = 0
     latest_temperature_event = None
 
     def handle_call_back(self, event_data):
         super().handle_call_back(event_data)
         if self.latest_event["event_name"] == "Temperature":
+            if not self.first_temperature_event:
+                self.first_temperature_event = event_data
+            self.total_temperature_events += 1
             if self.latest_temperature_event:
                 event_data["elapsed"] = getElapsedSeconds(self.latest_temperature_event)
             self.latest_temperature_event = event_data
@@ -82,10 +87,15 @@ class TemperatureSensor(Sensor):
         return temperature
 
 class LightEventHandler(EventHandler):
+    first_light_event = None
+    total_light_events = 0
     latest_on_event = None
 
     def handle_call_back(self, event_data):
         super().handle_call_back(event_data)
+        if not self.first_light_event:
+            self.first_light_event = event_data
+        self.total_light_events += 1
         if self.latest_on_event:
             event_data["elapsed"] = getElapsedSeconds(self.latest_on_event)
         if self.latest_on_event is None and event_data["data"] == "true":
@@ -136,6 +146,12 @@ class LightSensor(Sensor):
         return "{:0>2}:{:0>2}".format(mins, secs)
 
 class App:
+    htmlHead = "<html lang=\"en\">" + \
+        "  <head>" + \
+        "    <title>Stove Monitor</title>" + \
+        "    <meta http-equiv=\"refresh\" content=\"5\">" + \
+        "  </head>"
+    
     def __init__(self):
         self.env_file_err = None
         if os.path.exists("./.env"):
@@ -169,11 +185,7 @@ class App:
                 red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
                 red_h3Tag2 = "<h3>"
 
-        thePage = Template("<html lang=\"en\">" + \
-        "  <head>" + \
-        "    <title>Stove Monitor</title>" + \
-        "    <meta http-equiv=\"refresh\" content=\"5\">" + \
-        "  </head>" + \
+        thePage = Template(self.htmlHead + \
         "    <style>" + \
         "  h1 { text-align: center; }" + \
         "  h3 { text-align: center; }" + \
@@ -208,9 +220,22 @@ class App:
         if self.env_file_err:
             theHistory = self.env_file_err
         else:
-            theHistory = "lightSensor.latest_event: " + str(self.lightSensor.eventHandler.latest_event) + "<br>" + \
-                        "lightSensor.latest_on_event: " + str(self.lightSensor.eventHandler.latest_on_event) + "<br>" + \
-                        "temperatureSensor.latest_temperature_event: " + str(self.temperatureSensor.eventHandler.latest_temperature_event) + "<br>"  
+            theHistory = self.htmlHead + \
+                        "lightSensor.first_light_event: " + \
+                            str(self.lightSensor.eventHandler.first_light_event) + "<br>" + \
+                        "lightSensor.total_light_events: " + \
+                            str(self.lightSensor.eventHandler.total_light_events) + "<br>" + \
+                        "lightSensor.latest_event: " + \
+                            str(self.lightSensor.eventHandler.latest_event) + "<br>" + \
+                        "lightSensor.latest_on_event: " + \
+                            str(self.lightSensor.eventHandler.latest_on_event) + "<br>" + \
+                        "temperatureSensor.first_temperature_event: " + \
+                            str(self.temperatureSensor.eventHandler.first_temperature_event) + "<br>"  + \
+                        "temperatureSensor.total_temperature_events: " + \
+                            str(self.temperatureSensor.eventHandler.total_temperature_events) + "<br>"  + \
+                        "temperatureSensor.latest_temperature_event: " + \
+                            str(self.temperatureSensor.eventHandler.latest_temperature_event) + "<br>"  + \
+                        "</html>"
         return HttpResponse(theHistory)      
 
 app = App()
