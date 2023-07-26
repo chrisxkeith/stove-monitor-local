@@ -17,21 +17,23 @@ def getElapsedSeconds(theEvent):
     if theEvent:
         now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
         then = datetime.strptime(theEvent["published_at"],
-                                "%Y-%m-%d %H:%M:%S").astimezone(ZoneInfo("US/Pacific")).timestamp()
+                                "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific")).timestamp()
         return int(now - then)
     return -1
 
 class CsvWriter():
-    now = datetime.now().strftime('%Y%m%d%H%M%S')
-    fileName = "events_" + now + ".csv"
-    def append(self, event):
-        with open(self.fileName, "a", newline="") as csvfile:
-            theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
-            # format for Google Sheets
-            pst = datetime.strptime(event["published_at"],
-                                    "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
-            event["published_at"] = pst.strftime("%Y-%m-%d %H:%M:%S")
-            theWriter.writerow(event)
+        now = datetime.now().strftime('%Y%m%d%H%M%S')
+        fileName = "events_" + now + ".csv"
+        def append(self, event):
+            # Enable only when running locally
+            if False:
+                with open(self.fileName, "a", newline="") as csvfile:
+                    theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
+                    # format for Google Sheets
+                    pst = datetime.strptime(event["published_at"],
+                                            "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
+                    event["published_at"] = pst.strftime("%Y-%m-%d %H:%M:%S")
+                    theWriter.writerow(event)
 
 csvWriter = CsvWriter()
 
@@ -122,7 +124,7 @@ class LightSensor(Sensor):
         if self.eventHandler.latest_on_event:
             [ on_time, elapsed_time ] = self.getTimeVals(
                     datetime.strptime(self.eventHandler.latest_on_event["published_at"],
-                                      "%Y-%m-%d %H:%M:%S"))
+                                      "%Y-%m-%dT%H:%M:%S.%f%z"))
             elapsed_time += " elapsed"
         return [ status, on_time, elapsed_time ]
 
