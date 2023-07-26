@@ -122,7 +122,7 @@ class LightSensor(Sensor):
         if self.eventHandler.latest_on_event:
             [ on_time, elapsed_time ] = self.getTimeVals(
                     datetime.strptime(self.eventHandler.latest_on_event["published_at"],
-                                      "%Y-%m-%dT%H:%M:%S.%f%z"))
+                                      "%Y-%m-%d %H:%M:%S"))
             elapsed_time += " elapsed"
         return [ status, on_time, elapsed_time ]
 
