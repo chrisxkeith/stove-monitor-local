@@ -53,7 +53,6 @@ class CsvWriter():
                                         "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
                 event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
                 event["location"] = locations[event["coreid"]]
-                print(str(event))
                 theWriter.writerow(event)
 
 csvWriter = CsvWriter()
