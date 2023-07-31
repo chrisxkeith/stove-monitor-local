@@ -21,6 +21,27 @@ def getElapsedSeconds(theEvent):
         return int(now - then)
     return -1
 
+photon_01 = "1c002c001147343438323536"
+photon_02 = "300040001347343438323536"
+photon_05 = "19002a001347363336383438"
+photon_07 = "32002e000e47363433353735"
+photon_08 = "500041000b51353432383931"
+photon_09 = "1f0027001347363336383437"
+photon_10 = "410027001247363335343834"
+photon_14 = "28003d000147373334323233"
+photon_15 = "270037000a47373336323230"
+fake_photon = "fake_core_id"
+
+locations = {
+    photon_01 : "Big Bedroom",
+    photon_02 : "Small Bedroom",
+    photon_05 : "Stove",
+    photon_07 : "Stove",
+    photon_10 : "Office",
+    photon_07 : "Living Room",
+    fake_photon : "Nowhere",
+}
+
 class CsvWriter():
         now = datetime.now().strftime('%Y%m%d%H%M%S')
         fileName = "events_" + now + ".csv"
@@ -31,6 +52,8 @@ class CsvWriter():
                 pst = datetime.strptime(event["published_at"],
                                         "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
                 event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
+                event["location"] = locations[event["coreid"]]
+                print(str(event))
                 theWriter.writerow(event)
 
 csvWriter = CsvWriter()
