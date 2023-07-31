@@ -25,15 +25,13 @@ class CsvWriter():
         now = datetime.now().strftime('%Y%m%d%H%M%S')
         fileName = "events_" + now + ".csv"
         def append(self, event):
-            # Enable only when running locally
-            if False:
-                with open(self.fileName, "a", newline="") as csvfile:
-                    theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
-                    # format for Google Sheets
-                    pst = datetime.strptime(event["published_at"],
-                                            "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
-                    event["published_at"] = pst.strftime("%Y-%m-%d %H:%M:%S")
-                    theWriter.writerow(event)
+            with open(self.fileName, "a", newline="") as csvfile:
+                theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
+                # format for Google Sheets
+                pst = datetime.strptime(event["published_at"],
+                                        "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
+                event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
+                theWriter.writerow(event)
 
 csvWriter = CsvWriter()
 
