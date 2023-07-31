@@ -61,8 +61,6 @@ class EventHandler:
     latest_event = None
 
     def handle_call_back(self, event_data):
-        if self.latest_event:
-            event_data["elapsed"] = getElapsedSeconds(self.latest_event)
         self.latest_event = event_data
 
 class Sensor:
@@ -91,8 +89,6 @@ class TemperatureEventHandler(EventHandler):
             if not self.first_temperature_event:
                 self.first_temperature_event = event_data
             self.total_temperature_events += 1
-            if self.latest_temperature_event:
-                event_data["elapsed"] = getElapsedSeconds(self.latest_temperature_event)
             self.latest_temperature_event = event_data
             csvWriter.append(event_data)
 
@@ -118,8 +114,6 @@ class LightEventHandler(EventHandler):
         if not self.first_light_event:
             self.first_light_event = event_data
         self.total_light_events += 1
-        if self.latest_on_event:
-            event_data["elapsed"] = getElapsedSeconds(self.latest_on_event)
         if self.latest_on_event is None and event_data["data"] == "true":
             self.latest_on_event = self.latest_event
         if event_data["data"] == "false":
