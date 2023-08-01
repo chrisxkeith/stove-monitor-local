@@ -13,6 +13,9 @@ from zoneinfo import ZoneInfo
 
 import csv
 
+import json
+from urllib.request import urlopen
+
 photon_01 = "1c002c001147343438323536"
 photon_02 = "300040001347343438323536"
 photon_05 = "19002a001347363336383438"
@@ -40,15 +43,16 @@ class CsvWriter:
     def __init__(self, file_extension):
         now = datetime.now().strftime('%Y%m%d%H%M%S')
         self.fileName = file_extension + "_" + now + ".csv"
+        print("Writing to: " + os.path.realpath(self.fileName))
 
     def append(self, event):
         with open(self.fileName, "a", newline="") as csvfile:
-            theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
             # format for Google Sheets
             pst = datetime.strptime(event["published_at"],
                                     "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
             event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
             event["location"] = locations[event["coreid"]]
+            theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
             theWriter.writerow(event)
 
 eventCsvWriter = CsvWriter("events")
@@ -65,17 +69,24 @@ class ForecastGetter:
 
     def get_forecast(self):
         if self.new_day():
-            # TODO: write one event for each hour when data comes from NWS API.
-            ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z") + "Z" # TODO: why no timezone id?
-            event = {
-                "data" : "temperature forecast to come",
-                "ttl" : 1,
-                "published_at" : ts,
-                "coreid" : nws_core_id,
-                "event_name" : "Temperature forecast",
-            }
-            forecastCsvWriter.append(event)
-            self.last_call_to_api = datetime.now()
+            today = datetime.now().toordinal()
+            with urlopen("https://api.weather.gov/gridpoints/MTR/94,102/forecast/hourly") as f:
+                resp = json.load(f)
+                periods = resp["properties"]["periods"]
+                for period in periods:
+                    startTimeStr = period["startTime"]
+                    timeString = startTimeStr[0:22] + startTimeStr[23:]
+                    startTime = datetime.strptime(timeString, "%Y-%m-%dT%H:%M:%S%z")
+                    if startTime.toordinal() == today:
+                        event = {
+                            "data" : period["temperature"],
+                            "ttl" : 1,
+                            "published_at" : startTime.strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+                            "coreid" : nws_core_id,
+                            "event_name" : "Temperature forecast",
+                        }
+                        forecastCsvWriter.append(event)
+                self.last_call_to_api = datetime.now()
 
 forecastGetter = ForecastGetter()
 
