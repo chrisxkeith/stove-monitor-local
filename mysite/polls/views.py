@@ -56,7 +56,6 @@ class CsvWriter:
             theWriter.writerow(event)
 
 eventCsvWriter = CsvWriter("events")
-forecastCsvWriter = CsvWriter("forecast")
 
 class ForecastGetter:
     def __init__(self):
@@ -85,7 +84,7 @@ class ForecastGetter:
                             "coreid" : nws_core_id,
                             "event_name" : "Temperature forecast",
                         }
-                        forecastCsvWriter.append(event)
+                        eventCsvWriter.append(event)
                 self.last_call_to_api = datetime.now()
 
 forecastGetter = ForecastGetter()
