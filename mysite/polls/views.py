@@ -12,14 +12,9 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import csv
-
-def getElapsedSeconds(theEvent):
-    if theEvent:
-        now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
-        then = datetime.strptime(theEvent["published_at"],
-                                "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific")).timestamp()
-        return int(now - then)
-    return -1
+import schedule
+import threading
+import time
 
 photon_01 = "1c002c001147343438323536"
 photon_02 = "300040001347343438323536"
@@ -31,6 +26,7 @@ photon_10 = "410027001247363335343834"
 photon_14 = "28003d000147373334323233"
 photon_15 = "270037000a47373336323230"
 fake_photon = "fake_core_id"
+nws_core_id = "nws_core_id"
 
 locations = {
     photon_01 : "Big Bedroom",
@@ -40,22 +36,61 @@ locations = {
     photon_10 : "Office",
     photon_07 : "Living Room",
     fake_photon : "Nowhere",
+    nws_core_id : "Nowhere",
 }
 
-class CsvWriter():
+class CsvWriter:
+    def __init__(self, file_extension):
         now = datetime.now().strftime('%Y%m%d%H%M%S')
-        fileName = "events_" + now + ".csv"
-        def append(self, event):
-            with open(self.fileName, "a", newline="") as csvfile:
-                theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
-                # format for Google Sheets
-                pst = datetime.strptime(event["published_at"],
-                                        "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
-                event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
-                event["location"] = locations[event["coreid"]]
-                theWriter.writerow(event)
+        self.fileName = file_extension + "_" + now + ".csv"
 
-csvWriter = CsvWriter()
+    def append(self, event):
+        with open(self.fileName, "a", newline="") as csvfile:
+            theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
+            # format for Google Sheets
+            pst = datetime.strptime(event["published_at"],
+                                    "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
+            event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
+            event["location"] = locations[event["coreid"]]
+            theWriter.writerow(event)
+
+eventCsvWriter = CsvWriter("events")
+forecastCsvWriter = CsvWriter("forecast")
+
+class ForecastGetter:
+    def __init__(self):
+        # schedule.every().day.at("00:00").do(self.get_forecast)
+        schedule.every(1).minutes.do(self.get_forecast)
+        stop_run_continuously = self.run_continuously()
+
+    def get_forecast(self):
+        # TODO: write one event for each hour when data comes from NWS API.
+        ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z") + "Z" # TODO: why no timezone id?
+        event = {
+            "data" : "temperature forecast to come",
+            "ttl" : 1,
+            "published_at" : ts,
+            "coreid" : nws_core_id,
+            "event_name" : "Temperature forecast",
+        }
+        forecastCsvWriter.append(event)
+
+    def run_continuously(self, interval=10):
+        pass
+        # cease_continuous_run = threading.Event()
+
+        # class ScheduleThread(threading.Thread):
+        #     @classmethod
+        #     def run(cls):
+        #         while not cease_continuous_run.is_set():
+        #             schedule.run_pending()
+        #             time.sleep(interval)
+
+        # continuous_thread = ScheduleThread()
+        # continuous_thread.start()
+        # return cease_continuous_run
+
+forecastGetter = ForecastGetter()
 
 class EventHandler:
     latest_event = None
@@ -90,7 +125,7 @@ class TemperatureEventHandler(EventHandler):
                 self.first_temperature_event = event_data
             self.total_temperature_events += 1
             self.latest_temperature_event = event_data
-            csvWriter.append(event_data)
+            eventCsvWriter.append(event_data)
 
 class TemperatureSensor(Sensor):
     eventHandler = TemperatureEventHandler()
@@ -118,7 +153,7 @@ class LightEventHandler(EventHandler):
             self.latest_on_event = self.latest_event
         if event_data["data"] == "false":
             self.latest_on_event = None
-        csvWriter.append(event_data)
+        eventCsvWriter.append(event_data)
 
 class LightSensor(Sensor):
     eventHandler = LightEventHandler()
@@ -150,9 +185,17 @@ class LightSensor(Sensor):
     def getTimeString(self, theDateTime):
         return theDateTime.astimezone(ZoneInfo("US/Pacific")).strftime("%I:%M %p")
 
+    def getElapsedSeconds(self, theEvent):
+        if theEvent:
+            now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
+            then = datetime.strptime(theEvent["published_at"],
+                                    "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific")).timestamp()
+            return int(now - then)
+        return -1
+
     def getElapsedMySeconds(self):
         if self.eventHandler.latest_on_event:
-            return getElapsedSeconds(self.eventHandler.latest_on_event)
+            return self.getElapsedSeconds(self.eventHandler.latest_on_event)
         return -1
 
     def getElapsedTime(self):
