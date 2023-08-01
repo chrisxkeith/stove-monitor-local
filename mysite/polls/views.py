@@ -12,9 +12,6 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import csv
-import schedule
-import threading
-import time
 
 photon_01 = "1c002c001147343438323536"
 photon_02 = "300040001347343438323536"
@@ -59,36 +56,26 @@ forecastCsvWriter = CsvWriter("forecast")
 
 class ForecastGetter:
     def __init__(self):
-        # schedule.every().day.at("00:00").do(self.get_forecast)
-        schedule.every(1).minutes.do(self.get_forecast)
-        stop_run_continuously = self.run_continuously()
+        self.last_call_to_api = None
+
+    def new_day(self):
+        if not self.last_call_to_api:
+            return True
+        return datetime.now().toordinal() > self.last_call_to_api.toordinal()
 
     def get_forecast(self):
-        # TODO: write one event for each hour when data comes from NWS API.
-        ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z") + "Z" # TODO: why no timezone id?
-        event = {
-            "data" : "temperature forecast to come",
-            "ttl" : 1,
-            "published_at" : ts,
-            "coreid" : nws_core_id,
-            "event_name" : "Temperature forecast",
-        }
-        forecastCsvWriter.append(event)
-
-    def run_continuously(self, interval=10):
-        pass
-        # cease_continuous_run = threading.Event()
-
-        # class ScheduleThread(threading.Thread):
-        #     @classmethod
-        #     def run(cls):
-        #         while not cease_continuous_run.is_set():
-        #             schedule.run_pending()
-        #             time.sleep(interval)
-
-        # continuous_thread = ScheduleThread()
-        # continuous_thread.start()
-        # return cease_continuous_run
+        if self.new_day():
+            # TODO: write one event for each hour when data comes from NWS API.
+            ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z") + "Z" # TODO: why no timezone id?
+            event = {
+                "data" : "temperature forecast to come",
+                "ttl" : 1,
+                "published_at" : ts,
+                "coreid" : nws_core_id,
+                "event_name" : "Temperature forecast",
+            }
+            forecastCsvWriter.append(event)
+            self.last_call_to_api = datetime.now()
 
 forecastGetter = ForecastGetter()
 
@@ -132,6 +119,7 @@ class TemperatureSensor(Sensor):
 
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
+        forecastGetter.get_forecast()
 
     def getDisplayVals(self):
         temperature = "No data yet"
