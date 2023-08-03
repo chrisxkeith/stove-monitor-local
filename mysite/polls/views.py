@@ -34,7 +34,7 @@ locations = {
     photon_05 : "Stove",
     photon_07 : "Stove",
     photon_10 : "Office",
-    photon_07 : "Living Room",
+    photon_15 : "Living Room",
     fake_photon : "Nowhere",
     nws_core_id : "Nowhere",
 }
@@ -218,6 +218,9 @@ class App:
                 particleCloud = ParticleCloud(username_or_access_token=os.getenv("ACCESS_TOKEN"))
             self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
+            self.thermistorSensors = []
+            for photonName in [ "photon_02", "photon_10", "photon_15", ]: # "photon_01", 
+                self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
         else:
             self.env_file_err = "Error: No file: ./.env in " + os.getcwd()
             print(self.env_file_err)
