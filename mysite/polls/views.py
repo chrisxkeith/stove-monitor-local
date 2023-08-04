@@ -100,12 +100,17 @@ class Sensor:
 
     def __init__(self, particleCloud, deviceName, eventName):
         if particleCloud:
-            device = [d for d in particleCloud.devices_list if d.name == deviceName][0]
+            device = None
+            try:
+                device = [d for d in particleCloud.devices_list if d.name == deviceName][0]
+            except IndexError as e:
+                print(repr(e) + ", No device named, " + deviceName + ", eventName: " + eventName)
+                return
             device.subscribe(eventName, self.handle_call_back)
             try:
                 device.getData("")
             except Exception as e:
-                print(repr(e) + ", deviceName: " + deviceName + ", eventName: " + eventName)
+                print(repr(e) + ", getData() failed, deviceName: " + deviceName + ", eventName: " + eventName)
 
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
@@ -219,7 +224,7 @@ class App:
             self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
             self.thermistorSensors = []
-            for photonName in [ "photon_02", "photon_10", "photon_15", ]: # "photon_01", 
+            for photonName in [ "photon-02", "photon-10", "photon-15", ]: # "photon_01", 
                 self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
         else:
             self.env_file_err = "Error: No file: ./.env in " + os.getcwd()
