@@ -16,6 +16,8 @@ import csv
 import json
 from urllib.request import urlopen
 
+import time
+
 photon_01 = "1c002c001147343438323536"
 photon_02 = "300040001347343438323536"
 photon_05 = "19002a001347363336383438"
@@ -224,8 +226,9 @@ class App:
             self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
             self.thermistorSensors = []
-            for photonName in [ "photon-02", "photon-10", "photon-15", ]: # "photon_01", 
+            for photonName in [ "photon-01", "photon-02", "photon-10", "photon-15", ]: 
                 self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
+                time.sleep(5) # Give this server time to respond to the first event sent by constructors (?)
         else:
             self.env_file_err = "Error: No file: ./.env in " + os.getcwd()
             print(self.env_file_err)
