@@ -123,12 +123,11 @@ class TemperatureEventHandler(EventHandler):
 
     def handle_call_back(self, event_data):
         super().handle_call_back(event_data)
-        if self.latest_event["event_name"] == "Temperature":
-            if not self.first_temperature_event:
-                self.first_temperature_event = event_data
-            self.total_temperature_events += 1
-            self.latest_temperature_event = event_data
-            eventCsvWriter.append(event_data)
+        if not self.first_temperature_event:
+            self.first_temperature_event = event_data
+        self.total_temperature_events += 1
+        self.latest_temperature_event = event_data
+        eventCsvWriter.append(event_data)
 
 class TemperatureSensor(Sensor):
     eventHandler = TemperatureEventHandler()
