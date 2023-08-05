@@ -37,8 +37,8 @@ locations = {
     photon_07 : "Stove",
     photon_10 : "Office",
     photon_15 : "Living Room",
-    fake_photon : "Nowhere",
-    nws_core_id : "Nowhere",
+    fake_photon : "For Testing Only",
+    nws_core_id : "Forecast",
 }
 
 class CsvWriter:
@@ -46,6 +46,7 @@ class CsvWriter:
         now = datetime.now().strftime('%Y%m%d%H%M%S')
         self.fileName = file_extension + "_" + now + ".csv"
         print("Writing to: " + os.path.realpath(self.fileName))
+        self.wroteHeader = False
 
     def append(self, event):
         with open(self.fileName, "a", newline="") as csvfile:
@@ -55,6 +56,9 @@ class CsvWriter:
             event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
             event["location"] = locations[event["coreid"]]
             theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
+            if not self.wroteHeader:
+                theWriter.writeheader()
+                self.wroteHeader = True                
             theWriter.writerow(event)
 
 eventCsvWriter = CsvWriter("events")
@@ -84,7 +88,7 @@ class ForecastGetter:
                             "ttl" : 1,
                             "published_at" : startTime.strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
                             "coreid" : nws_core_id,
-                            "event_name" : "Temperature forecast",
+                            "event_name" : "Temperature",
                         }
                         eventCsvWriter.append(event)
                 self.last_call_to_api = datetime.now()
