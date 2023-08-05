@@ -108,7 +108,8 @@ class Sensor:
                 return
             device.subscribe(eventName, self.handle_call_back)
             try:
-                device.getData("")
+                ret = device.getData("")
+                print(repr(ret) + " (device.getData() return value), deviceName: " + deviceName + ", eventName: " + eventName)
             except Exception as e:
                 print(repr(e) + ", getData() failed, deviceName: " + deviceName + ", eventName: " + eventName)
 
