@@ -13,20 +13,20 @@ class TestLightSensor(TestCase):
             "data" : "false",
             "ttl" : 1,
             "published_at" : "2023-07-17T16:38:01.560Z",
-            "coreid" : "fake_core_id",
+            "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
         }, "Off")
         self.do_test({
             "data" : "true",
             "ttl" : 1,
             "published_at" : "2023-07-17T16:39:01.560Z",
-            "coreid" : "fake_core_id",
+            "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
         }, "On")
         self.do_test({
             "data" : "true",
             "ttl" : 1,
             "published_at" : "2023-07-17T17:39:01.560Z",
-            "coreid" : "fake_core_id",
+            "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
         }, "Tomato")

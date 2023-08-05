@@ -37,7 +37,6 @@ locations = {
     photon_07 : "Stove",
     photon_10 : "Office",
     photon_15 : "Living Room",
-    fake_photon : "For Testing Only",
     nws_core_id : "Forecast",
 }
 
@@ -115,7 +114,7 @@ class Sensor:
             device.subscribe(eventName, self.handle_call_back)
             try:
                 ret = device.getData("")
-                print(repr(ret) + " (device.getData() return value), deviceName: " + deviceName + ", eventName: " + eventName)
+                print("device.getData() return value) = " + repr(ret) + ", deviceName: " + deviceName + ", eventName: " + eventName)
             except Exception as e:
                 print(repr(e) + ", getData() failed, deviceName: " + deviceName + ", eventName: " + eventName)
 
