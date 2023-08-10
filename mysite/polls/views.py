@@ -71,8 +71,8 @@ class ForecastGetter:
             return True
         return datetime.now().toordinal() > self.last_call_to_api.toordinal()
 
-    def get_forecast(self):
-        if self.new_day():
+    def try_to_get_forecast(self):
+        try:
             today = datetime.now().toordinal()
             with urlopen("https://api.weather.gov/gridpoints/MTR/94,102/forecast/hourly") as f:
                 resp = json.load(f)
@@ -91,6 +91,13 @@ class ForecastGetter:
                         }
                         eventCsvWriter.append(event)
                 self.last_call_to_api = datetime.now()
+        except Exception as e:
+            print("Exception: '" + str(e) + "' when trying to get forecast data. Will try again tomorrow.")
+            self.last_call_to_api = datetime.now()
+
+    def get_forecast(self):
+        if self.new_day():
+            self.try_to_get_forecast()
 
 forecastGetter = ForecastGetter()
 
