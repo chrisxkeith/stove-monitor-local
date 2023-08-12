@@ -17,7 +17,7 @@ class Xformer:
             with open(f, "r", newline="") as csvfile:
                 theReader = csv.DictReader(csvfile)
                 for row in theReader:
-                    if row["location"]:
+                    if row["location"] and row["location"] != "Stove Light":
                         columnNames.add(row["location"])
         columnNames.remove("")
         temperatureRows = {}
@@ -25,7 +25,7 @@ class Xformer:
             with open(f, "r", newline="") as csvfile:
                 theReader = csv.DictReader(csvfile)
                 for row in theReader:
-                    if row["location"]:
+                    if row["location"] and row["location"] != "Stove Light":
                         ts = datetime.strptime(row["gsheets_timestamp"],
                                "%Y-%m-%d %H:%M:%S")
                         truncedTime =  ts.strftime("%Y-%m-%d %H:00:00")

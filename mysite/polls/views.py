@@ -33,8 +33,8 @@ nws_core_id = "nws_core_id"
 locations = {
     photon_01 : "Big Bedroom",
     photon_02 : "Small Bedroom",
-    photon_05 : "Stove",
-    photon_07 : "Stove",
+    photon_05 : "Stove Temperature",
+    photon_07 : "Stove Light",
     photon_10 : "Office",
     photon_15 : "Living Room",
     nws_core_id : "Forecast",
