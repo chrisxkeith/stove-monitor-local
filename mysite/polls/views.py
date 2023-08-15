@@ -35,7 +35,8 @@ locations = {
     photon_02 : "Small Bedroom",
     photon_05 : "Stove Temperature",
     photon_07 : "Stove Light",
-    photon_08 : "Kitchen",
+    photon_08 : "Kitchen", 
+    photon_09 : "FL Room",
     photon_10 : "Office",
     photon_15 : "Living Room",
     nws_core_id : "Forecast",
@@ -237,7 +238,7 @@ class App:
             self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
             self.thermistorSensors = []
-            for photonName in [ "photon-01", "photon-02", "photon-08", "photon-10", "photon-15", ]: 
+            for photonName in [ "photon-01", "photon-02", "photon-08", "photon-09", "photon-10", "photon-15", ]: 
                 self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
                 time.sleep(5) # Give this server time to respond to the first event sent by constructors (?)
         else:
