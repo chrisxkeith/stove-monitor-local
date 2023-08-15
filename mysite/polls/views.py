@@ -73,7 +73,7 @@ class ForecastGetter:
             return True
         return datetime.now().toordinal() > self.last_call_to_api.toordinal()
 
-    def try_to_get_forecast(self):
+    def try_to_get_forecast(self, event_func):
         try:
             tomorrow = datetime.now().toordinal() + 1
             with urlopen("https://api.weather.gov/gridpoints/MTR/94,102/forecast/hourly") as f:
@@ -91,7 +91,7 @@ class ForecastGetter:
                             "coreid" : nws_core_id,
                             "event_name" : "Temperature",
                         }
-                        eventCsvWriter.append(event)
+                        event_func(event)
                 self.last_call_to_api = datetime.now()
         except Exception as e:
             print("Exception: '" + str(e) + "' when trying to get forecast data. Will try again tomorrow.")
@@ -99,7 +99,7 @@ class ForecastGetter:
 
     def get_forecast(self):
         if self.new_day():
-            self.try_to_get_forecast()
+            self.try_to_get_forecast(eventCsvWriter.append)
 
 forecastGetter = ForecastGetter()
 
@@ -228,6 +228,8 @@ class App:
         "    <meta http-equiv=\"refresh\" content=\"5\">" + \
         "  </head>"
     
+    forecast_events = []
+
     def __init__(self):
         self.env_file_err = None
         if os.path.exists("./.env"):
@@ -318,14 +320,22 @@ class App:
                         "</html>"
         return HttpResponse(theHistory)
 
+    def forecast_data(self, event_data):
+        self.forecast_events.append(event_data)
+
     def showForecast(self):
         if self.env_file_err:
-            theHistory = self.env_file_err
+            theforecast = self.env_file_err
         else:
-            theHistory = self.htmlHead + \
-                        "Local forecast to come." + \
+            self.forecast_events = []
+            forecastGetter.try_to_get_forecast(self.forecast_data)
+            theStr = ""
+            for e in self.forecast_events:
+                theStr += str(e) + "<br>"
+            theforecast = self.htmlHead + \
+                        theStr + \
                         "</html>"
-        return HttpResponse(theHistory) 
+        return HttpResponse(theforecast) 
 
 app = App()
 
