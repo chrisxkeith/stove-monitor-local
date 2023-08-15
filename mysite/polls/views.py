@@ -75,7 +75,7 @@ class ForecastGetter:
 
     def try_to_get_forecast(self):
         try:
-            today = datetime.now().toordinal()
+            tomorrow = datetime.now().toordinal() + 1
             with urlopen("https://api.weather.gov/gridpoints/MTR/94,102/forecast/hourly") as f:
                 resp = json.load(f)
                 periods = resp["properties"]["periods"]
@@ -83,7 +83,7 @@ class ForecastGetter:
                     startTimeStr = period["startTime"]
                     timeString = startTimeStr[0:22] + startTimeStr[23:]
                     startTime = datetime.strptime(timeString, "%Y-%m-%dT%H:%M:%S%z")
-                    if startTime.toordinal() == today:
+                    if startTime.toordinal() <= tomorrow:
                         event = {
                             "data" : period["temperature"],
                             "ttl" : 1,
