@@ -316,7 +316,16 @@ class App:
                         "temperatureSensor.latest_temperature_event: " + \
                             str(self.temperatureSensor.eventHandler.latest_temperature_event) + "<br>"  + \
                         "</html>"
-        return HttpResponse(theHistory)      
+        return HttpResponse(theHistory)
+
+    def showForecast(self):
+        if self.env_file_err:
+            theHistory = self.env_file_err
+        else:
+            theHistory = self.htmlHead + \
+                        "Local forecast to come." + \
+                        "</html>"
+        return HttpResponse(theHistory) 
 
 app = App()
 
@@ -325,3 +334,6 @@ def index(request):
 
 def history(request):
     return app.handleHistory()
+
+def forecast(request):
+    return app.showForecast()
