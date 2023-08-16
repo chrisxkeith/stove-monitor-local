@@ -4,6 +4,11 @@ import csv
 import glob
 
 class Xformer:
+     def can_add_row(self, row):
+         if row["location"] and "Stove" not in row["location"]:
+             return row["data"].isnumeric()
+         return False
+         
      def xform(self):
         print(os.getcwd())
         filenames = glob.glob("events_*csv")
@@ -17,7 +22,7 @@ class Xformer:
             with open(f, "r", newline="") as csvfile:
                 theReader = csv.DictReader(csvfile)
                 for row in theReader:
-                    if row["location"] and "Stove" not in row["location"]:
+                    if self.can_add_row(row):
                         columnNames.add(row["location"])
         columnNames.remove("")
         temperatureRows = {}
@@ -25,7 +30,7 @@ class Xformer:
             with open(f, "r", newline="") as csvfile:
                 theReader = csv.DictReader(csvfile)
                 for row in theReader:
-                    if row["location"] and "Stove" not in row["location"]:
+                    if self.can_add_row(row):
                         ts = datetime.strptime(row["gsheets_timestamp"],
                                "%Y-%m-%d %H:%M:%S")
                         truncedTime =  ts.strftime("%Y-%m-%d %H:00:00")
@@ -41,12 +46,13 @@ class Xformer:
         print("Writing to: " + os.path.realpath(fileName))
 
         with open(fileName, "a", newline="") as csvfile:
-            theFn = ["gsheets_timestamp"]
+            sortedTemps = dict(sorted(temperatureRows.items()))
+            theFieldNames = ["gsheets_timestamp"]
             for c in columnNames:
-                theFn.append(c)
-            theWriter = csv.DictWriter(csvfile, fieldnames = theFn)
+                theFieldNames.append(c)
+            theWriter = csv.DictWriter(csvfile, fieldnames = theFieldNames)
             theWriter.writeheader()
-            for key, val in temperatureRows.items():
+            for key, val in sortedTemps.items():
                 row = {
                     "gsheets_timestamp" : key,
                 }
