@@ -47,14 +47,14 @@ class Xformer:
 
         with open(fileName, "a", newline="") as csvfile:
             sortedTemps = dict(sorted(temperatureRows.items()))
-            theFieldNames = ["gsheets_timestamp"]
+            theFieldNames = ["Hour"]
             for c in columnNames:
                 theFieldNames.append(c)
             theWriter = csv.DictWriter(csvfile, fieldnames = theFieldNames)
             theWriter.writeheader()
             for key, val in sortedTemps.items():
                 row = {
-                    "gsheets_timestamp" : key,
+                    "Hour" : key,
                 }
                 for c in columnNames:
                     row[c] = val[c]
