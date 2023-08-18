@@ -130,24 +130,6 @@ class Sensor:
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
 
-class DemoTemperatureEventHandler(EventHandler):
-    latest_event = {
-        "data" : "101",
-        "ttl" : 1,
-        "published_at" : "2023-07-17T16:39:01.560Z",
-        "coreid" : "1c002c001147343438323536",
-        "event_name" : "Temperature",
-    }
-    latest_temperature_event = {
-        "data" : "101",
-        "ttl" : 1,
-        "published_at" : "2023-07-17T16:39:01.560Z",
-        "coreid" : "1c002c001147343438323536",
-        "event_name" : "Temperature",
-    }
-    def handle_call_back(self, event_data):
-        pass
-
 class TemperatureEventHandler(EventHandler):
     first_temperature_event = None
     total_temperature_events = 0
@@ -162,7 +144,7 @@ class TemperatureEventHandler(EventHandler):
         eventCsvWriter.append(event_data)
 
 class TemperatureSensor(Sensor):
-    eventHandler = TemperatureEventHandler() # DemoTemperatureEventHandler()
+    eventHandler = TemperatureEventHandler()
 
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
@@ -173,27 +155,6 @@ class TemperatureSensor(Sensor):
         if (self.eventHandler.latest_temperature_event):
             temperature = str(self.eventHandler.latest_event["data"])
         return temperature
-
-class DemoLightEventHandler():
-    latest_event = {
-        "data" : "false",
-        "ttl" : 1,
-        "published_at" : "2023-07-17T16:38:01.560Z",
-        "coreid" : "1c002c001147343438323536",
-        "event_name" : "Light sensor",
-    }
-    now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
-    then_datetime = datetime.fromtimestamp(now - ( 60 *60))
-    published_at = then_datetime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-    latest_on_event = {
-        "data" : "true",
-        "ttl" : 1,
-        "published_at" : published_at,
-        "coreid" : "1c002c001147343438323536",
-        "event_name" : "Light sensor",
-    }
-    def handle_call_back(self, event_data):
-        pass
 
 class LightEventHandler(EventHandler):
     first_light_event = None
@@ -212,7 +173,7 @@ class LightEventHandler(EventHandler):
         eventCsvWriter.append(event_data)
 
 class LightSensor(Sensor):
-    eventHandler = LightEventHandler() # DemoLightEventHandler()
+    eventHandler = LightEventHandler()
 
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
