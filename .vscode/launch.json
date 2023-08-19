@@ -22,6 +22,18 @@
             ],
             "django": true,
             "justMyCode": true
+        },
+        {
+            "name": "Python: Django test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}\\mysite\\manage.py",
+            "args": [
+                "test",
+                "stove-monitor-local\\mysite\\"
+            ],
+            "django": true,
+            "justMyCode": true
         }
     ]
 }
