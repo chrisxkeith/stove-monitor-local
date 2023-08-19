@@ -242,7 +242,7 @@ class App:
             self.thermistorSensors = []
             for photonName in [ "photon-01", "photon-02", "photon-08", "photon-09", "photon-10", "photon-15", ]: 
                 self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
-                time.sleep(5) # Give this server time to respond to the first event sent by constructors (?)
+                time.sleep(2) # Give this server time to respond to the first event sent by constructors (?)
         else:
             self.env_file_err = "Error: No file: ./.env in " + os.getcwd()
             print(self.env_file_err)

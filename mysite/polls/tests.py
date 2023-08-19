@@ -8,7 +8,8 @@ class TestLightSensor(TestCase):
         app.lightSensor.handle_call_back(data)
         ret = app.handleRequest()
         # print(ret.content)
-        self.assertContains(ret, expected)
+        for e in expected:
+            self.assertContains(ret, e)
 
     def test_elapsed_time(self):
         self.do_test({
@@ -17,21 +18,21 @@ class TestLightSensor(TestCase):
             "published_at" : "2023-07-17T16:38:01.560Z",
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
-        }, "Off")
+        }, [ "Off" ])
         self.do_test({
             "data" : "true",
             "ttl" : 1,
             "published_at" : "2023-07-17T16:39:01.560Z",
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
-        }, "On")
+        }, [ "On" ])
         self.do_test({
             "data" : "true",
             "ttl" : 1,
             "published_at" : "2023-07-17T17:39:01.560Z",
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
-        }, "Tomato")
+        }, [ "Tomato" ])
         now = datetime.now()
         more_than_an_hour_ago = datetime.fromtimestamp(now.timestamp() - (60 * 65))
         self.do_test({
@@ -40,7 +41,7 @@ class TestLightSensor(TestCase):
             "published_at" : more_than_an_hour_ago.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
-        }, "Off")
+        }, [ "Off" ])
         hour_ago = datetime.fromtimestamp(now.timestamp() - (60 * 60))
         self.do_test({
             "data" : "true",
@@ -48,12 +49,5 @@ class TestLightSensor(TestCase):
             "published_at" : hour_ago.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
-        }, "On")
-        # self.do_test({
-        #     "data" : "true",
-        #     "ttl" : 1,
-        #     "published_at" : now.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-        #     "coreid" : "1c002c001147343438323536",
-        #     "event_name" : "Light sensor",
-        # }, "00:00")
+        }, [ "On" ]) # "00:00"
 
