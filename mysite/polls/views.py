@@ -121,6 +121,7 @@ class Sensor:
                 print(repr(e) + ", No device named, " + deviceName + ", eventName: " + eventName)
                 return
             device.subscribe(eventName, self.handle_call_back)
+            time.sleep(2) # Give this server time to respond to the first event (?)
             try:
                 ret = device.getData("")
                 print("device.getData() return value) = " + repr(ret) + ", deviceName: " + deviceName + ", eventName: " + eventName)
@@ -242,7 +243,6 @@ class App:
             self.thermistorSensors = []
             for photonName in [ "photon-01", "photon-02", "photon-08", "photon-09", "photon-10", "photon-15", ]: 
                 self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
-                time.sleep(2) # Give this server time to respond to the first event sent by constructors (?)
         else:
             self.env_file_err = "Error: No file: ./.env in " + os.getcwd()
             print(self.env_file_err)
@@ -261,7 +261,7 @@ class App:
             [ status, on_time, elapsed_time ] = self.lightSensor.getDisplayVals()
             temperature = self.temperatureSensor.getDisplayVals()
             now = datetime.now(ZoneInfo("US/Pacific"))
-            timeNow = now.strftime("%a %d %b %Y, %I:%M%p %Z")
+            timeNow = now.strftime("%a %d %b %Y, %I:%M:%S %p %Z")
             elapsedSeconds = self.lightSensor.getElapsedMySeconds()
             if elapsedSeconds > (45 * 60):
                 red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
