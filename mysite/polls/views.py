@@ -42,6 +42,18 @@ locations = {
     nws_core_id : "Forecast",
 }
 
+locations_by_name = {
+    "photon-01" : "Big Bedroom",
+    "photon-02" : "Small Bedroom",
+    "photon-05" : "Stove Temperature",
+    "photon-07" : "Stove Light",
+    "photon-08" : "Kitchen", 
+    "photon-09" : "FL Room",
+    "photon-10" : "Office",
+    "photon-15" : "Living Room",
+    "nws_core_id" : "Forecast",
+}
+
 class CsvWriter:
     def __init__(self, file_extension):
         now = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -124,10 +136,14 @@ class Sensor:
             time.sleep(2) # Give this server time to respond to the first event (?)
             try:
                 ret = device.getData("")
-                print("device.getData() return value) = " + repr(ret) + ", deviceName: " + deviceName + ", eventName: " + eventName)
+                # TODO: Add location to message 
+                print("device.getData() return value) = " + repr(ret) + \
+                    ", deviceName: " + deviceName + ", eventName: " + eventName + \
+                    ", " + locations_by_name[deviceName])
             except Exception as e:
-                print(repr(e) + ", getData() failed, deviceName: " + deviceName + ", eventName: " + eventName)
-
+                print(repr(e) + ", getData() failed, deviceName: " + \
+                    deviceName + ", eventName: " + eventName + \
+                    ", " + locations_by_name[deviceName])
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
 
