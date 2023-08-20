@@ -24,7 +24,8 @@ class Xformer:
         for f in multi_day_filenames:
             with open(f, "r", newline="") as csvfile:
                 theReader = csv.DictReader(csvfile)
-                columnNames = theReader.fieldnames
+                if theReader.fieldnames:
+                    columnNames = theReader.fieldnames
                 for row in theReader:
                     temperatureRows[row["Hour"]] = row
         return [ columnNames, temperatureRows ]
@@ -53,19 +54,21 @@ class Xformer:
 
         with open(fileName, "a", newline="") as csvfile:
             sortedTemps = dict(sorted(temperatureRows.items()))
-            theFieldNames = ["Hour"]
-            for c in columnNames:
-                theFieldNames.append(c)
-            theWriter = csv.DictWriter(csvfile, fieldnames = theFieldNames)
+            theWriter = csv.DictWriter(csvfile, fieldnames = columnNames)
             theWriter.writeheader()
             for key, val in sortedTemps.items():
-                row = {
-                    "Hour" : key,
-                }
-                for c in columnNames:
-                    if (c in val):
-                        row[c] = val[c]
-                theWriter.writerow(row)
+                if key:
+                    row = {
+                        "Hour" : key,
+                    }
+                    for c in columnNames:
+                        try:
+                            row[c] = val[c]
+                        except:
+                            pass
+                    theWriter.writerow(row)
+                else:
+                    print("No key: " + str(val))
 
     def xform(self):
         print(os.getcwd())
