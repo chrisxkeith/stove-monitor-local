@@ -63,7 +63,8 @@ class Xformer:
                     "Hour" : key,
                 }
                 for c in columnNames:
-                    row[c] = val[c]
+                    if (c in val):
+                        row[c] = val[c]
                 theWriter.writerow(row)
 
     def xform(self):
