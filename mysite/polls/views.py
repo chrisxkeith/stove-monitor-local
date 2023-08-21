@@ -27,7 +27,6 @@ photon_09 = "1f0027001347363336383437"
 photon_10 = "410027001247363335343834"
 photon_14 = "28003d000147373334323233"
 photon_15 = "270037000a47373336323230"
-fake_photon = "fake_core_id"
 nws_core_id = "nws_core_id"
 
 locations = {
