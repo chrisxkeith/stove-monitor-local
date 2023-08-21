@@ -84,6 +84,8 @@ class Xformer:
                     if self.can_add_row(row) and not row["location"] in columnNames:
                         columnNames.append(row["location"])
         self.read_event_data(temperatureRows, columnNames, event_filenames)
+        if not "Hour" in columnNames:
+            columnNames.insert(0, "Hour")
         self.write_multi_day_data(columnNames, temperatureRows)
 
 xformer = Xformer()
