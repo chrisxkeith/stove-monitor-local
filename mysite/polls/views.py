@@ -53,11 +53,15 @@ locations_by_name = {
     "nws_core_id" : "Forecast",
 }
 
+def log(msg):
+    now = datetime.now().strftime('%Y%m%d%H%M%S')
+    print(now + "\t" + msg)
+
 class CsvWriter:
     def __init__(self, file_extension):
         now = datetime.now().strftime('%Y%m%d%H%M%S')
         self.fileName = file_extension + "_" + now + ".csv"
-        print("Writing to: " + os.path.realpath(self.fileName))
+        log("Will write to: " + os.path.realpath(self.fileName))
         self.wroteHeader = False
 
     def append(self, event):
@@ -105,7 +109,7 @@ class ForecastGetter:
                         event_func(event)
                 self.last_call_to_api = datetime.now()
         except Exception as e:
-            print("Exception: '" + str(e) + "' when trying to get forecast data. Will try again tomorrow.")
+            log("Exception: '" + str(e) + "' when trying to get forecast data. Will try again tomorrow.")
             self.last_call_to_api = datetime.now()
 
     def get_forecast(self):
@@ -123,28 +127,40 @@ class EventHandler:
 class Sensor:
     eventHandler = EventHandler()
 
+    def getData(self):
+        try:
+            ret = self.device.getData("")
+            log("device.getData() return value) = " + repr(ret) + \
+                ", deviceName: " + self.deviceName + ", eventName: " + self.eventName + \
+                ", " + locations_by_name[self.deviceName])
+        except Exception as e:
+            log(repr(e) + ", getData() failed, deviceName: " + \
+                self.deviceName + ", eventName: " + self.eventName + \
+                ", " + locations_by_name[self.deviceName])
+
     def __init__(self, particleCloud, deviceName, eventName):
         if particleCloud:
             device = None
             try:
                 device = [d for d in particleCloud.devices_list if d.name == deviceName][0]
             except IndexError as e:
-                print(repr(e) + ", No device named, " + deviceName + ", eventName: " + eventName)
+                log(repr(e) + ", No device named, " + deviceName + ", eventName: " + eventName + \
+                ", " + locations_by_name[deviceName])
                 return
             device.subscribe(eventName, self.handle_call_back)
-            time.sleep(2) # Give this server time to respond to the first event (?)
-            try:
-                ret = device.getData("")
-                # TODO: Add location to message 
-                print("device.getData() return value) = " + repr(ret) + \
-                    ", deviceName: " + deviceName + ", eventName: " + eventName + \
-                    ", " + locations_by_name[deviceName])
-            except Exception as e:
-                print(repr(e) + ", getData() failed, deviceName: " + \
-                    deviceName + ", eventName: " + eventName + \
-                    ", " + locations_by_name[deviceName])
+            self.device = device
+            self.deviceName = deviceName
+            self.eventName = eventName
+
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
+
+# For 'circular' reference
+class AbstractApp():
+    def check_devices(self):
+        pass
+
+app = AbstractApp()
 
 class TemperatureEventHandler(EventHandler):
     first_temperature_event = None
@@ -165,6 +181,7 @@ class TemperatureSensor(Sensor):
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)
         forecastGetter.get_forecast()
+        app.check_devices()
 
     def getDisplayVals(self):
         temperature = "No data yet"
@@ -237,7 +254,7 @@ class LightSensor(Sensor):
         secs = int(elapsedSeconds % 60)
         return "{:0>2}:{:0>2}".format(mins, secs)
 
-class App:
+class App(AbstractApp):
     htmlHead = "<html lang=\"en\">" + \
         "  <head>" + \
         "    <title>Stove Monitor</title>" + \
@@ -245,6 +262,7 @@ class App:
         "  </head>"
     
     forecast_events = []
+    last_call_to_getData = None
 
     def __init__(self):
         self.env_file_err = None
@@ -258,9 +276,27 @@ class App:
             self.thermistorSensors = []
             for photonName in [ "photon-01", "photon-02", "photon-08", "photon-09", "photon-10", "photon-15", ]: 
                 self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
+            self.get_data()
         else:
             self.env_file_err = "Error: No file: ./.env in " + os.getcwd()
-            print(self.env_file_err)
+            log(self.env_file_err)
+
+    def get_data(self):
+        self.lightSensor.getData()
+        time.sleep(2) # Give this server time to respond to the first event (?)
+        self.temperatureSensor.getData()
+        time.sleep(2)
+        for t in self.thermistorSensors:
+            t.getData()
+            time.sleep(2)
+        self.last_call_to_getData = datetime.now()
+
+    def check_devices(self):
+        if not self.last_call_to_getData:
+            return
+        if datetime.now().toordinal() <= self.last_call_to_getData.toordinal():
+            return
+        self.get_data()
 
     def handleRequest(self):
         on_time = ""
