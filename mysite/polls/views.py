@@ -263,6 +263,7 @@ class App(AbstractApp):
     
     forecast_events = []
     last_call_to_getData = None
+    getting_data = False
 
     def __init__(self):
         self.env_file_err = None
@@ -296,7 +297,11 @@ class App(AbstractApp):
             return
         if datetime.now().toordinal() <= self.last_call_to_getData.toordinal():
             return
+        if self.getting_data:
+            return
+        self.getting_data = True
         self.get_data()
+        self.getting_data = False
 
     def handleRequest(self):
         on_time = ""
