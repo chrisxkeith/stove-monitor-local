@@ -4,6 +4,8 @@
 
 `cd stove-monitor-local/mysite/`
 
+`sudo apt update`
+
 `python -m pip install Django`
 
 `pip install python_dotenv`
