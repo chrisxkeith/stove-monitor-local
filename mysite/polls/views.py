@@ -17,6 +17,7 @@ import json
 from urllib.request import urlopen
 
 import time
+import sys
 
 photon_01 = "1c002c001147343438323536"
 photon_02 = "300040001347343438323536"
@@ -57,25 +58,40 @@ def log(msg):
     now = datetime.now().strftime('%Y%m%d%H%M%S')
     print(now + "\t" + msg)
 
+def get_host():
+    # Windows?
+    if os.environ.get("COMPUTERNAME"):
+        return os.environ["COMPUTERNAME"]
+    # Linux?
+    if os.environ.get("HOSTNAME"):
+        return os.environ["HOSTNAME"]
+    # WTF?
+    log("Unable to determine host name, exiting.")
+    sys.exit(-666)
+
+WRITE_CSVS = get_host() == "2018-CK-NUC"
+
 class CsvWriter:
     def __init__(self, file_extension):
-        now = datetime.now().strftime('%Y%m%d%H%M%S')
-        self.fileName = file_extension + "_" + now + ".csv"
-        log("Will write to: " + os.path.realpath(self.fileName))
-        self.wroteHeader = False
+        if WRITE_CSVS:
+            now = datetime.now().strftime('%Y%m%d%H%M%S')
+            self.fileName = file_extension + "_" + now + ".csv"
+            log("Will write to: " + os.path.realpath(self.fileName))
+            self.wroteHeader = False
 
     def append(self, event):
-        with open(self.fileName, "a", newline="") as csvfile:
-            # format for Google Sheets
-            pst = datetime.strptime(event["published_at"],
-                                    "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
-            event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
-            event["location"] = locations[event["coreid"]]
-            theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
-            if not self.wroteHeader:
-                theWriter.writeheader()
-                self.wroteHeader = True                
-            theWriter.writerow(event)
+        if WRITE_CSVS:
+            with open(self.fileName, "a", newline="") as csvfile:
+                # format for Google Sheets
+                pst = datetime.strptime(event["published_at"],
+                                        "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific"))
+                event["gsheets_timestamp"] = pst.strftime("%Y-%m-%d %H:%M:%S")
+                event["location"] = locations[event["coreid"]]
+                theWriter = csv.DictWriter(csvfile, fieldnames = event.keys())
+                if not self.wroteHeader:
+                    theWriter.writeheader()
+                    self.wroteHeader = True                
+                theWriter.writerow(event)
 
 eventCsvWriter = CsvWriter("events")
 
