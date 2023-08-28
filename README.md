@@ -4,11 +4,11 @@
 
 `cd stove-monitor-local/mysite/`
 
-`python -m pip install Django`
+`sudo apt update`
 
-`pip install python_dotenv`
+`sudo apt install python3-pip`
 
-`pip install PyParticleIO`
+`pip install -r requirements.txt` (or pip3)
 
 See https://github.com/chrisxkeith/stove-monitor-local/blob/main/requirements.txt for full list.
 
