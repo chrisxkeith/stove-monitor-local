@@ -1,10 +1,10 @@
 # stove-monitor-local
 
-`git clone https://github.com/chrisxkeith/stove-monitor-local.git`
-
 `sudo apt update`
 
 `sudo apt install python3-pip`
+
+`git clone https://github.com/chrisxkeith/stove-monitor-local.git`
 
 `pip install -r requirements.txt` (or pip3)
 
