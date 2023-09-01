@@ -79,6 +79,8 @@ class CsvWriter:
             self.fileName = file_extension + "_" + now + ".csv"
             log("Will write to: " + os.path.realpath(self.fileName))
             self.wroteHeader = False
+        else:
+            log("Not writing .csv file")
 
     def append(self, event):
         if WRITE_CSVS:
