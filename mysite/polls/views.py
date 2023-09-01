@@ -9,7 +9,10 @@ from pyparticleio.ParticleCloud import ParticleCloud
 from dotenv import load_dotenv
 import os
 from datetime import datetime
-from zoneinfo import ZoneInfo
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import Zoneinfo
 
 import csv
 
