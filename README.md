@@ -10,11 +10,11 @@
 
 Windows:
 
-pip install `pywin32==306`
+    pip install pywin32==306
 
 Linux:
 
-`pip install backports.zoneinfo`
+    pip install backports.zoneinfo
 
 `cd stove-monitor-local/mysite/`
 
