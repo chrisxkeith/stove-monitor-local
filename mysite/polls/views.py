@@ -12,7 +12,7 @@ from datetime import datetime
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
-    from backports.zoneinfo import Zoneinfo
+    from backports.zoneinfo import ZoneInfo
 
 import csv
 
