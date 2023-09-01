@@ -68,9 +68,7 @@ def get_host():
     # Linux?
     if os.environ.get("HOSTNAME"):
         return os.environ["HOSTNAME"]
-    # WTF?
-    log("Unable to determine host name, exiting.")
-    sys.exit(-666)
+    return "unknown host"
 
 WRITE_CSVS = get_host() == "2018-CK-NUC"
 
