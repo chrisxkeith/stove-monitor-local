@@ -2,9 +2,13 @@
 
 `sudo apt update`
 
-`sudo apt install python3-pip`
+`sudo apt install git` (if necessary)
 
 `git clone https://github.com/chrisxkeith/stove-monitor-local.git`
+
+`sudo apt install python3-pip`
+
+`cd stove-monitor-local`
 
 `pip install -r requirements.txt` (or pip3)
 
@@ -16,7 +20,7 @@ Linux:
 
     pip install backports.zoneinfo
 
-`cd stove-monitor-local/mysite/`
+`cd mysite/`
 
 `python manage.py runserver`
 
