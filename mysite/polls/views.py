@@ -70,7 +70,7 @@ def get_host():
         return os.environ["HOSTNAME"]
     return "unknown host"
 
-WRITE_CSVS = get_host() == "2018-CK-NUC"
+WRITE_CSVS = False # get_host() == "2018-CK-NUC"
 
 class CsvWriter:
     def __init__(self, file_extension):
@@ -294,8 +294,8 @@ class App(AbstractApp):
             self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
             self.thermistorSensors = []
-            for photonName in [ "photon-01", "photon-02", "photon-08", "photon-09", "photon-10", "photon-15", ]: 
-                self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
+            # for photonName in [ "photon-01", "photon-02", "photon-08", "photon-09", "photon-10", "photon-15", ]: 
+            #    self.thermistorSensors.append(TemperatureSensor(particleCloud, photonName, "Temperature"))
             self.get_data()
         else:
             self.env_file_err = "Error: No file: ./.env in " + os.getcwd()
@@ -305,10 +305,9 @@ class App(AbstractApp):
         self.lightSensor.getData()
         time.sleep(2) # Give this server time to respond to the first event (?)
         self.temperatureSensor.getData()
-        time.sleep(2)
         for t in self.thermistorSensors:
-            t.getData()
             time.sleep(2)
+            t.getData()
         self.last_call_to_getData = datetime.now()
 
     def check_devices(self):
