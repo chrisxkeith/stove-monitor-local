@@ -209,20 +209,25 @@ class TemperatureSensor(Sensor):
         return temperature
 
 class LightEventHandler(EventHandler):
-    first_light_event = None
-    total_light_events = 0
-    latest_on_event = None
-
+    light_event = None
     def handle_call_back(self, event_data):
         super().handle_call_back(event_data)
-        if not self.first_light_event:
-            self.first_light_event = event_data
-        self.total_light_events += 1
-        if self.latest_on_event is None and event_data["data"] == "true":
-            self.latest_on_event = self.latest_event
-        if event_data["data"] == "false":
-            self.latest_on_event = None
-        eventCsvWriter.append(event_data)
+        self.light_event = json.loads(event_data["data"])
+
+    def getValsForDisplay(self):
+        status = "No data yet"
+        on_time = None
+        elapsed_seconds = None
+        if (self.light_event):
+            if self.light_event["on"] == "true":
+                status = "On"
+                on_time = datetime.strptime(self.light_event["whenSwitchedToOn"],
+                                        "%Y-%m-%dT%H:%M:%S")
+                now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
+                elapsed_seconds = now - on_time.timestamp()
+            else:
+                status = "Off"
+        return [ status, on_time, elapsed_seconds ]
 
 class LightSensor(Sensor):
     eventHandler = LightEventHandler()
@@ -231,47 +236,20 @@ class LightSensor(Sensor):
         self.eventHandler.handle_call_back(event_data)
 
     def getDisplayVals(self):
-        status = "Off"
-        on_time = ""
-        elapsed_time = ""
-        if (self.eventHandler.latest_event):
-            if self.eventHandler.latest_event["data"] == "true":
-                status = "On"
-        else:
-            status = "No data yet"
-        if self.eventHandler.latest_on_event:
-            [ on_time, elapsed_time ] = self.getTimeVals(
-                    datetime.strptime(self.eventHandler.latest_on_event["published_at"],
-                                      "%Y-%m-%dT%H:%M:%S.%f%z"))
-            elapsed_time += " elapsed"
-        return [ status, on_time, elapsed_time ]
+        [ status, on_time, elapsed_seconds ] = self.eventHandler.getValsForDisplay()
+        elapsed_display = ""
+        if elapsed_seconds:
+            mins = int(elapsed_seconds / 60)
+            secs = int(elapsed_seconds % 60)
+            elapsed_display = "Elapsed: {:0>2}:{:0>2}".format(mins, secs)
+        time_turned_on = ""
+        if on_time:
+            time_turned_on = on_time.astimezone(ZoneInfo("US/Pacific")).strftime("%I:%M %p")
+        return [ status, time_turned_on, elapsed_display ]
 
-    def getTimeVals(self, ts):
-        on_time = self.getTimeString(ts)
-        elapsed_time = self.getElapsedTime()
-        return [ on_time, elapsed_time ]
-
-    def getTimeString(self, theDateTime):
-        return theDateTime.astimezone(ZoneInfo("US/Pacific")).strftime("%I:%M %p")
-
-    def getElapsedSeconds(self, theEvent):
-        if theEvent:
-            now = datetime.now().astimezone(ZoneInfo("US/Pacific")).timestamp()
-            then = datetime.strptime(theEvent["published_at"],
-                                    "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(ZoneInfo("US/Pacific")).timestamp()
-            return int(now - then)
-        return -1
-
-    def getElapsedMySeconds(self):
-        if self.eventHandler.latest_on_event:
-            return self.getElapsedSeconds(self.eventHandler.latest_on_event)
-        return -1
-
-    def getElapsedTime(self):
-        elapsedSeconds = self.getElapsedMySeconds()
-        mins = int(elapsedSeconds / 60)
-        secs = int(elapsedSeconds % 60)
-        return "{:0>2}:{:0>2}".format(mins, secs)
+    def getElapsedSeconds(self):
+        [ status, on_time, elapsed_seconds ] = self.eventHandler.getValsForDisplay()
+        return elapsed_seconds
 
 class App(AbstractApp):
     htmlHead = "<html lang=\"en\">" + \
@@ -336,8 +314,8 @@ class App(AbstractApp):
             temperature = self.temperatureSensor.getDisplayVals()
             now = datetime.now(ZoneInfo("US/Pacific"))
             timeNow = now.strftime("%a %d %b %Y, %I:%M:%S %p %Z")
-            elapsedSeconds = self.lightSensor.getElapsedMySeconds()
-            if elapsedSeconds > (45 * 60):
+            elapsedSeconds = self.lightSensor.getElapsedSeconds()
+            if elapsedSeconds and elapsedSeconds > (45 * 60):
                 red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
                 red_h3Tag2 = "<h3>"
 
@@ -377,8 +355,6 @@ class App(AbstractApp):
             theHistory = self.env_file_err
         else:
             theHistory = self.htmlHead + \
-                        "lightSensor.first_light_event: " + \
-                            str(self.lightSensor.eventHandler.first_light_event) + "<br>" + \
                         "lightSensor.total_light_events: " + \
                             str(self.lightSensor.eventHandler.total_light_events) + "<br>" + \
                         "lightSensor.latest_event: " + \
