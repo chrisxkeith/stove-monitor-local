@@ -23,7 +23,6 @@ class TestLightSensor(TestCase):
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
         }, [ "Off" ])
-        hour_ago = datetime.fromtimestamp(now.timestamp() - (60 * 60)).astimezone(ZoneInfo("UTC"))
         app.temperatureSensor.handle_call_back({
             "data" : "99",
             "ttl" : 1,
@@ -31,13 +30,13 @@ class TestLightSensor(TestCase):
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Temperature",
         })
-"""         self.do_test({
+        hour_ago = datetime.fromtimestamp(now.timestamp() - (60 * 60)).astimezone(ZoneInfo("US/Pacific"))
+        self.do_test({
             "data" : "{\"on\":\"true\",\"whenSwitchedToOn\":\""
-                        + more_than_an_hour_ago.strftime("%Y-%m-%dT%H:%M:%S") 
+                        + hour_ago.strftime("%Y-%m-%dT%H:%M:%S") 
                         + "\"}",
             "ttl" : 1,
-            "published_at" : hour_ago.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "published_at" : more_than_an_hour_ago.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
         }, [ "On", "Tomato", "60:00" ])
- """
