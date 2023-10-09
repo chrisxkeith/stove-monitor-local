@@ -158,8 +158,10 @@ class Sensor:
                 ", " + locations_by_name[self.deviceName])
 
     def __init__(self, particleCloud, deviceName, eventName):
+        self.deviceName = deviceName
+        self.eventName = eventName
+        device = None
         if particleCloud:
-            device = None
             try:
                 device = [d for d in particleCloud.devices_list if d.name == deviceName][0]
             except IndexError as e:
@@ -167,9 +169,7 @@ class Sensor:
                 ", " + locations_by_name[deviceName])
                 return
             device.subscribe(eventName, self.handle_call_back)
-            self.device = device
-            self.deviceName = deviceName
-            self.eventName = eventName
+        self.device = device
 
     def handle_call_back(self, event_data):
         self.eventHandler.handle_call_back(event_data)

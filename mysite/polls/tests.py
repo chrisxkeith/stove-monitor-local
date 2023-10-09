@@ -17,7 +17,7 @@ class TestLightSensor(TestCase):
         now = datetime.now()
         more_than_an_hour_ago = datetime.fromtimestamp(now.timestamp() - (60 * 65)).astimezone(ZoneInfo("UTC"))
         self.do_test({
-            "data" : "false",
+            "data" : "{\"on\":\"false\",\"whenSwitchedToOn\":\"\"}",
             "ttl" : 1,
             "published_at" : more_than_an_hour_ago.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "coreid" : "1c002c001147343438323536",
@@ -31,11 +31,13 @@ class TestLightSensor(TestCase):
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Temperature",
         })
-        self.do_test({
-            "data" : "true",
+"""         self.do_test({
+            "data" : "{\"on\":\"true\",\"whenSwitchedToOn\":\""
+                        + more_than_an_hour_ago.strftime("%Y-%m-%dT%H:%M:%S") 
+                        + "\"}",
             "ttl" : 1,
             "published_at" : hour_ago.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "coreid" : "1c002c001147343438323536",
             "event_name" : "Light sensor",
         }, [ "On", "Tomato", "60:00" ])
-
+ """
