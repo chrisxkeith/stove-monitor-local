@@ -53,7 +53,7 @@ locations_by_name = {
     "photon-08" : "Kitchen", 
     "photon-09" : "FL Room",
     "photon-10" : "Office",
-    "photon-15" : "Living Room",
+    "photon-15" : "Development",
     "nws_core_id" : "Forecast",
 }
 
