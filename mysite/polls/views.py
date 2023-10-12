@@ -241,7 +241,9 @@ class LightSensor(Sensor):
         if elapsed_seconds:
             mins = int(elapsed_seconds / 60)
             secs = int(elapsed_seconds % 60)
-            elapsed_display = "Elapsed: {:0>2}:{:0>2}".format(mins, secs)
+            hours = int(mins / 60)
+            mins = int(mins % 60)
+            elapsed_display = "Elapsed: {:0>2}:{:0>2}:{:0>2}".format(hours, mins, secs)
         time_turned_on = ""
         if on_time:
             time_turned_on = on_time.astimezone(ZoneInfo("US/Pacific")).strftime("%I:%M %p")
