@@ -265,8 +265,6 @@ class App(AbstractApp):
     forecast_events = []
     last_call_to_getData = None
     getting_data = False
-    PRODUCTION_LIGHT_SENSOR = 0
-    DEVELOPMENT_LIGHT_SENSOR = 1
 
     def __init__(self):
         self.env_file_err = None
@@ -275,9 +273,7 @@ class App(AbstractApp):
             if not settings.TESTING:
                 load_dotenv("./.env")
                 particleCloud = ParticleCloud(username_or_access_token=os.getenv("ACCESS_TOKEN"))
-            self.lightSensors = []
-            self.lightSensors.append(LightSensor(particleCloud, "photon-07", "Light sensor"))
-            self.lightSensors.append(LightSensor(particleCloud, "photon-15", "Light sensor"))
+            self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
             self.thermistorSensors = []
             # for photonName in [ "photon-01", "photon-02", "photon-08", "photon-09", "photon-10", "photon-15", ]: 
@@ -288,9 +284,8 @@ class App(AbstractApp):
             log(self.env_file_err)
 
     def get_data(self):
-        for sensor in self.lightSensors:
-            sensor.getData()
-            time.sleep(2) # Give this server time to respond to the first event (?)
+        self.lightSensor.getData()
+        time.sleep(2) # Give this server time to respond to the first event (?)
         self.temperatureSensor.getData()
         for t in self.thermistorSensors:
             time.sleep(2)
@@ -319,15 +314,13 @@ class App(AbstractApp):
         if self.env_file_err:
             status = self.env_file_err
         else:
-            lightSensorIndex = self.DEVELOPMENT_LIGHT_SENSOR if showDev else self.PRODUCTION_LIGHT_SENSOR
-            lightSensor = self.lightSensors[lightSensorIndex]
-            [ status, on_time, elapsed_time ] = lightSensor.getDisplayVals()
+            [ status, on_time, elapsed_time ] = self.lightSensor.getDisplayVals()
             if showDev:
-                status = status + " (dev)"
+                status = status + " (dev is disabled!)"
             temperature = self.temperatureSensor.getDisplayVals()
             now = datetime.now(ZoneInfo("US/Pacific"))
             timeNow = now.strftime("%a %d %b %Y, %I:%M:%S %p %Z")
-            elapsedSeconds = lightSensor.getElapsedSeconds()
+            elapsedSeconds = self.lightSensor.getElapsedSeconds()
             if elapsedSeconds and elapsedSeconds > (45 * 60):
                 red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
                 red_h3Tag2 = "<h3>"
@@ -367,7 +360,7 @@ class App(AbstractApp):
         if self.env_file_err:
             theHistory = self.env_file_err
         else:
-            lightSensor = self.lightSensors[self.PRODUCTION_LIGHT_SENSOR]
+            lightSensor = self.lightSensor
             theHistory = self.htmlHead + \
                         "(Production) lightSensor.latest_event: " + \
                             str(lightSensor.eventHandler.latest_event) + "<br>" + \
