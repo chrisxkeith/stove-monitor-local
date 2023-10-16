@@ -12,7 +12,8 @@ from datetime import datetime
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
-    from backports.zoneinfo import ZoneInfo
+    # Just to handle older python versions on Linux, not needed unless I try GCP again
+    pass # from backports.zoneinfo import ZoneInfo
 
 import csv
 
@@ -263,6 +264,8 @@ class App(AbstractApp):
     forecast_events = []
     last_call_to_getData = None
     getting_data = False
+    PRODUCTION_LIGHT_SENSOR = 0
+    DEVELOPMENT_LIGHT_SENSOR = 1
 
     def __init__(self):
         self.env_file_err = None
@@ -271,7 +274,9 @@ class App(AbstractApp):
             if not settings.TESTING:
                 load_dotenv("./.env")
                 particleCloud = ParticleCloud(username_or_access_token=os.getenv("ACCESS_TOKEN"))
-            self.lightSensor = LightSensor(particleCloud, "photon-07", "Light sensor")
+            self.lightSensors = []
+            self.lightSensors.append(LightSensor(particleCloud, "photon-07", "Light sensor"))
+            self.lightSensors.append(LightSensor(particleCloud, "photon-15", "Light sensor"))
             self.temperatureSensor = TemperatureSensor(particleCloud, "photon-05", "Temperature")
             self.thermistorSensors = []
             # for photonName in [ "photon-01", "photon-02", "photon-08", "photon-09", "photon-10", "photon-15", ]: 
@@ -282,8 +287,9 @@ class App(AbstractApp):
             log(self.env_file_err)
 
     def get_data(self):
-        self.lightSensor.getData()
-        time.sleep(2) # Give this server time to respond to the first event (?)
+        for sensor in self.lightSensors:
+            sensor.getData()
+            time.sleep(2) # Give this server time to respond to the first event (?)
         self.temperatureSensor.getData()
         for t in self.thermistorSensors:
             time.sleep(2)
@@ -301,7 +307,7 @@ class App(AbstractApp):
         self.get_data()
         self.getting_data = False
 
-    def handleRequest(self):
+    def handleRequest(self, showDev):
         on_time = ""
         elapsed_time = ""
         temperature = "No data yet"
@@ -312,11 +318,15 @@ class App(AbstractApp):
         if self.env_file_err:
             status = self.env_file_err
         else:
-            [ status, on_time, elapsed_time ] = self.lightSensor.getDisplayVals()
+            lightSensorIndex = self.DEVELOPMENT_LIGHT_SENSOR if showDev else self.PRODUCTION_LIGHT_SENSOR
+            lightSensor = self.lightSensors[lightSensorIndex]
+            [ status, on_time, elapsed_time ] = lightSensor.getDisplayVals()
+            if showDev:
+                status = status + " (dev)"
             temperature = self.temperatureSensor.getDisplayVals()
             now = datetime.now(ZoneInfo("US/Pacific"))
             timeNow = now.strftime("%a %d %b %Y, %I:%M:%S %p %Z")
-            elapsedSeconds = self.lightSensor.getElapsedSeconds()
+            elapsedSeconds = lightSensor.getElapsedSeconds()
             if elapsedSeconds and elapsedSeconds > (45 * 60):
                 red_h3tag1 = "<h3 style=\"background-color: Tomato;\">"
                 red_h3Tag2 = "<h3>"
@@ -356,13 +366,10 @@ class App(AbstractApp):
         if self.env_file_err:
             theHistory = self.env_file_err
         else:
+            lightSensor = self.lightSensors[self.PRODUCTION_LIGHT_SENSOR]
             theHistory = self.htmlHead + \
-                        "lightSensor.total_light_events: " + \
-                            str(self.lightSensor.eventHandler.total_light_events) + "<br>" + \
-                        "lightSensor.latest_event: " + \
-                            str(self.lightSensor.eventHandler.latest_event) + "<br>" + \
-                        "lightSensor.latest_on_event: " + \
-                            str(self.lightSensor.eventHandler.latest_on_event) + "<br>" + \
+                        "(Production) lightSensor.latest_event: " + \
+                            str(lightSensor.eventHandler.latest_event) + "<br>" + \
                         "temperatureSensor.first_temperature_event: " + \
                             str(self.temperatureSensor.eventHandler.first_temperature_event) + "<br>"  + \
                         "temperatureSensor.total_temperature_events: " + \
@@ -392,7 +399,10 @@ class App(AbstractApp):
 app = App()
 
 def index(request):
-    return app.handleRequest()
+    return app.handleRequest(False)
+
+def dev(request):
+    return app.handleRequest(True)
 
 def history(request):
     return app.handleHistory()
