@@ -110,24 +110,25 @@ class ForecastGetter:
 
     def try_to_get_forecast(self, event_func):
         try:
-            tomorrow = datetime.now().toordinal() + 1
-            with urlopen("https://api.weather.gov/gridpoints/MTR/94,102/forecast/hourly") as f:
-                resp = json.load(f)
-                periods = resp["properties"]["periods"]
-                for period in periods:
-                    startTimeStr = period["startTime"]
-                    timeString = startTimeStr[0:22] + startTimeStr[23:]
-                    startTime = datetime.strptime(timeString, "%Y-%m-%dT%H:%M:%S%z")
-                    if startTime.toordinal() <= tomorrow:
-                        event = {
-                            "data" : period["temperature"],
-                            "ttl" : 1,
-                            "published_at" : startTime.strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
-                            "coreid" : nws_core_id,
-                            "event_name" : "Temperature",
-                        }
-                        event_func(event)
-                self.last_call_to_api = datetime.now()
+            if False:
+                tomorrow = datetime.now().toordinal() + 1
+                with urlopen("https://api.weather.gov/gridpoints/MTR/94,102/forecast/hourly") as f:
+                    resp = json.load(f)
+                    periods = resp["properties"]["periods"]
+                    for period in periods:
+                        startTimeStr = period["startTime"]
+                        timeString = startTimeStr[0:22] + startTimeStr[23:]
+                        startTime = datetime.strptime(timeString, "%Y-%m-%dT%H:%M:%S%z")
+                        if startTime.toordinal() <= tomorrow:
+                            event = {
+                                "data" : period["temperature"],
+                                "ttl" : 1,
+                                "published_at" : startTime.strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+                                "coreid" : nws_core_id,
+                                "event_name" : "Temperature",
+                            }
+                            event_func(event)
+                    self.last_call_to_api = datetime.now()
         except Exception as e:
             log("Exception: '" + str(e) + "' when trying to get forecast data. Will try again tomorrow.")
             self.last_call_to_api = datetime.now()
@@ -388,9 +389,10 @@ class App(AbstractApp):
         else:
             self.forecast_events = []
             forecastGetter.try_to_get_forecast(self.forecast_data)
-            theStr = ""
-            for e in self.forecast_events:
-                theStr += str(e) + "<br>"
+            theStr = "forecast disabled"
+            if len(self.forecast_events) > 0:
+                for e in self.forecast_events:
+                    theStr += str(e) + "<br>"
             theforecast = self.htmlHead + \
                         theStr + \
                         "</html>"
