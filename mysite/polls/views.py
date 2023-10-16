@@ -42,7 +42,7 @@ locations = {
     photon_08 : "Kitchen", 
     photon_09 : "FL Room",
     photon_10 : "Office",
-    photon_15 : "Living Room",
+    photon_15 : "Development",
     nws_core_id : "Forecast",
 }
 
